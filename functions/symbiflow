@@ -84,7 +84,7 @@ GO(dram_test) {
 }
 
 GO(dram) {
-    build_target(dram_$1, 2)
+    build_target(dram_$1, $2)
     cd ${SF_ROOT}/build/xc7/tests/dram/dram_${1}/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
 }
 
@@ -109,4 +109,8 @@ GO(sf_env) {
       cd ${SF_ROOT}
       make env
     }})
+}
+
+GO(to_test) {
+    cd ${SF_ROOT}/build/*/tests/*/$1/*/
 }
