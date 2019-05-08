@@ -42,6 +42,108 @@ save_project_as -force design.xpr}})
     }})
 }
 
+GO(open_in_vivado) {
+    source ~/src/prjxray/database/artix7/settings.sh
+    source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
+    BLOCK({{
+      FILE_VAR(runme.tcl, {{
+create_project -force -part \$::env(XRAY_PART) design design
+
+foreach v {$@} {
+  read_verilog \$v
+}
+synth_design -top top
+
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 3.3 [current_design]
+set_property BITSTREAM.GENERAL.PERFRAMECRC YES [current_design]
+
+set pins {tx       A18
+          rx       B18
+          sw[0]    V17
+          sw[1]    V16
+          sw[2]    W16
+          sw[3]    W17
+          sw[4]    W15
+          sw[5]    V15
+          sw[6]    W14
+          sw[7]    W13
+          sw[8]    V2
+          sw[9]    T3
+          sw[10]   T2
+          sw[11]   R3
+          sw[12]   W2
+          sw[13]   U1
+          sw[14]   T1
+          sw[15]   R2
+          in[0]    V17
+          in[1]    V16
+          in[2]    W16
+          in[3]    W17
+          in[4]    W15
+          in[5]    V15
+          in[6]    W14
+          in[7]    W13
+          in[8]    V2
+          in[9]    T3
+          in[10]   T2
+          in[11]   R3
+          in[12]   W2
+          in[13]   U1
+          in[14]   T1
+          in[15]   R2
+          led[0]   U16
+          led[1]   E19
+          led[2]   U19
+          led[3]   V19
+          led[4]   W18
+          led[5]   U15
+          led[6]   U14
+          led[7]   V14
+          led[8]   V13
+          led[9]   V3
+          led[10]  W3
+          led[11]  U3
+          led[12]  P3
+          led[13]  N3
+          led[14]  P1
+          led[15]  L1
+          out[0]   U16
+          out[1]   E19
+          out[2]   U19
+          out[3]   V19
+          out[4]   W18
+          out[5]   U15
+          out[6]   U14
+          out[7]   V14
+          out[8]   V13
+          out[9]   V3
+          out[10]  W3
+          out[11]  U3
+          out[12]  P3
+          out[13]  N3
+          out[14]  P1
+          out[15]  L1
+          clk      W5}
+
+foreach {port_name pin} \$pins {
+    set ports [get_ports \$port_name]
+    if { [llength \$ports] > 0 } {
+        set_property -dict "PACKAGE_PIN \$pin IOSTANDARD LVCMOS33" \$ports
+    }
+}
+
+write_checkpoint -force design_pre_place.dcp
+place_design
+route_design
+
+write_checkpoint -force design.dcp
+write_bitstream -force design.bit
+save_project_as -force design.xpr}})
+      ${XRAY_VIVADO} -source runme.tcl
+    }})
+}
+
 GO(write_bit) {
     source ~/src/prjxray/database/artix7/settings.sh
     openocd -f $XRAY_DIR/utils/openocd/board-digilent-basys3.cfg -c "init; pld load 0 $1; exit" || return
@@ -113,14 +215,6 @@ GO(sf_env) {
       make env
     }})
 }
-
-define({{WITH_SHOPT}},
-       {{__shopts={{$}}{BASHOPTS}
-         shopt -s $1
-         $2
-         shopt -u $1
-         shopt -s {{$}}{__shopts//:/ }
-         unset __shopts;}})dnl
 
 GO(to_test) {
     WITH_SHOPT(nullglob, {{
