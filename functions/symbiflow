@@ -130,7 +130,11 @@ GO(to_test) {
     if [ ${__matches} -lt 1 ]; then
         echo "No matches."
     elif [ ${__matches} -gt 1 ]; then
-        echo "Ambiguous: " __dirs
+        echo "Which dir?"
+        select dir in "${__dirs[@]}"; do
+            cd ${dir}
+            break
+        done
     else
         cd ${__dirs[0]}
     fi
