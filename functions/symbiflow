@@ -1,9 +1,14 @@
 # -*- mode: sh -*-
 
+SF_ROOT=${SF_ROOT:-${HOME}/src/symbiflow-arch-defs}
+
 GO(sf) {
     BLOCK({{
-      cd ~/src/symbiflow-arch-defs
-      nix-shell ~/nix/sf-shell.nix
+      if [ "$FHS_USER_ENV" != "true" ]
+      then
+          nix-shell ~/nix/sf-shell.nix
+      fi
+      cd ${SF_ROOT}
     }})
 }
 
@@ -111,6 +116,26 @@ GO(sf_env) {
     }})
 }
 
+define({{WITH_SHOPT}},
+       {{__shopts={{$}}{BASHOPTS}
+         shopt -s $1
+         $2
+         shopt -u $1
+         shopt -s {{$}}{__shopts//:/ }
+         unset __shopts;}})dnl
+
 GO(to_test) {
-    cd ${SF_ROOT}/build/*/tests/*/$1/*/
+    WITH_SHOPT(nullglob, {{
+      __dirs=( ${SF_ROOT}/build/*/tests/*/$1/*/ )
+    }})
+    __matches=${#__dirs[@]}
+    if [ ${__matches} -lt 1 ]; then
+        echo "No matches."
+    elif [ ${__matches} -gt 1 ]; then
+        echo "Ambiguous: " __dirs
+    else
+        cd ${__dirs[0]}
+    fi
+    unset __dirs
+    unset __matches
 }
