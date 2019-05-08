@@ -3,13 +3,11 @@
 SF_ROOT=${SF_ROOT:-${HOME}/src/symbiflow-arch-defs}
 
 GO(sf) {
-    BLOCK({{
-      if [ "$FHS_USER_ENV" != "true" ]
-      then
-          nix-shell ~/nix/sf-shell.nix
-      fi
-      cd ${SF_ROOT}
-    }})
+    cd ${SF_ROOT}
+    if [ "$FHS_USER_ENV" != "true" ]
+    then
+        nix-shell ~/nix/sf-shell.nix
+    fi
 }
 
 GO(bit2vivado) {
