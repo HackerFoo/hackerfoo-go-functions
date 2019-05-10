@@ -204,9 +204,15 @@ GO(top_dram_n3) {
     }})
 }
 
-GO(serial_port) {
-    stty raw 500000 < /dev/ttyUSB1
-    xxd /dev/ttyUSB1
+GO(serial_hex) {
+    BLOCK({{
+      stty raw 500000 < /dev/ttyUSB1
+      xxd /dev/ttyUSB1
+    }})
+}
+
+GO(serial_ascii) {
+    screen /dev/ttyUSB1 115200
 }
 
 GO(sf_env) {
@@ -218,7 +224,7 @@ GO(sf_env) {
 
 GO(to_test) {
     WITH_SHOPT(nullglob, {{
-      __dirs=( ${SF_ROOT}/build/*/tests/*/$1/*/ )
+      __dirs=( ${SF_ROOT}/build/*/tests/*/$1/*/ ${SF_ROOT}/build/tests/*/*/$1/*/ )
     }})
     __matches=${#__dirs[@]}
     if [ ${__matches} -lt 1 ]; then

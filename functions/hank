@@ -2,7 +2,7 @@
 
 GO(kill-gdm-pa) {
   BLOCK({{
-    PID=`ps -u gdm | grep pulseaudio | cut -f 1 -d ' '`
-    sudo kill ${PID}
+    PS=( `ps -u gdm | grep -m 1 pulseaudio` )
+    sudo kill ${PS[0]}
   }})
 }

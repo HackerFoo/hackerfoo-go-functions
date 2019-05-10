@@ -3,3 +3,19 @@
 GO(switch) {
     sudo nixos-rebuild switch $@
 }
+
+GO(shell) {
+    if [ "$1" ]; then
+        nix-shell '<nixpkgs>' -A $1
+    else
+        echo "Package name required."
+    fi
+}
+
+GO(build) {
+    if [ "$1" ]; then
+        nix-shell '<nixpkgs>' -A $1 --command 'configurePhase && buildPhase; return;'
+    else
+        echo "Package name required."
+    fi
+}
