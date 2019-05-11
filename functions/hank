@@ -1,8 +1,11 @@
 # -*- mode: sh -*-
 
-GO(kill-gdm-pa) {
+GO(connect-headphones) {
   BLOCK({{
+    DEVICE_NAME="Cone of Silence"
     PS=( `ps -u gdm | grep -m 1 pulseaudio` )
     sudo kill ${PS[0]}
+    DEVICE=( `echo paired-devices | bluetoothctl | grep "$DEVICE_NAME"` )
+    echo "connect ${DEVICE[1]}" | bluetoothctl
   }})
 }
