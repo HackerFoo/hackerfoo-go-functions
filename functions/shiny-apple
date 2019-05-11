@@ -27,3 +27,7 @@ GO(update_popr_eval) {
       gcloud app deploy
     }})
 }
+
+GO(ssh-hank) {
+    ssh home.hackerfoo.com -p 2222
+}
