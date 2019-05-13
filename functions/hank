@@ -9,3 +9,12 @@ GO(connect-headphones) {
     echo "connect ${DEVICE[1]}" | bluetoothctl
   }})
 }
+
+GO(monitor) (
+    while true; do
+        SCREEN="$(lscpu; sensors)"
+        clear
+        echo "${SCREEN}"
+        sleep 0.1
+    done
+)

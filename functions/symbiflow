@@ -155,7 +155,7 @@ function __sf_build() {
     elif [ ! -d ${SF_ROOT}/build ]; then
         make -C ${SF_ROOT} env
     fi
-    make -C ${SF_ROOT}/build $@
+    script --return --quiet --output-limit 32M --command "make -C ${SF_ROOT}/build $@" ${SF_ROOT}/build/build.log
 }
 
 define({{build_target}}, {{
@@ -240,4 +240,8 @@ GO(to_test) {
     fi
     unset __dirs
     unset __matches
+}
+
+GO(clear_cmake_cache) {
+    rm -f ${SF_ROOT}/build/CMakeCache.txt
 }
