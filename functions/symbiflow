@@ -169,8 +169,8 @@ GO(shifter) {
 }
 
 GO(bshifter) {
-    build_target(bram_shifter, $1)
-    cd ${SF_ROOT}/build/xc7/tests/bram_shifter/bram_shifter/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
+    build_target(bram_shifter_$1, $2)
+    cd ${SF_ROOT}/build/xc7/tests/bram_shifter/bram_shifter_${1}/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
 }
 
 GO(dram_test) {
