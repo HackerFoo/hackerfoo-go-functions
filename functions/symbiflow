@@ -188,6 +188,28 @@ GO(dram_test) {
     fi
 }
 
+GO(bram_test) {
+    __BRAM_TEST=bram
+    if [[ $1 == *"init"* || $1 == *"sdp"* ]]; then
+        __BRAM_TEST=${__BRAM_TEST}_$1
+        shift
+    fi
+    __BRAM_TEST=${__BRAM_TEST}_test
+
+    if [ "$2" == "run" ]
+    then
+        if [ "$3" != "now" ]
+        then
+            build_target(${__BRAM_TEST}_$1, prog)
+        fi
+        cd ${SF_ROOT}/build/xc7/tests/${__BRAM_TEST}/${__BRAM_TEST}_$1/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
+        python ${SF_ROOT}/xc7/tests/common/read_uart.py --baud 500000 /dev/ttyUSB1
+    else
+        build_target(${__BRAM_TEST}_$1, $2)
+        cd ${SF_ROOT}/build/xc7/tests/${__BRAM_TEST}/${__BRAM_TEST}_$1/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
+    fi
+}
+
 GO(dram) {
     build_target(dram_$1, $2)
     cd ${SF_ROOT}/build/xc7/tests/dram/dram_${1}/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test

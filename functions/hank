@@ -6,6 +6,7 @@ GO(connect-headphones) {
     PS=( `ps -u gdm | grep -m 1 pulseaudio` )
     sudo kill ${PS[0]}
     DEVICE=( `echo paired-devices | bluetoothctl | grep "$DEVICE_NAME"` )
+    sleep 2
     echo "connect ${DEVICE[1]}" | bluetoothctl
   }})
 }
@@ -18,3 +19,11 @@ GO(monitor) (
         sleep 0.1
     done
 )
+
+GO(trim) {
+    if [ "$1" ]; then
+        export PROMPT_DIRTRIM=$1
+    else
+        export PROMPT_DIRTRIM=3
+    fi
+}
