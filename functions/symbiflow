@@ -271,10 +271,24 @@ GO(clear_cmake_cache) {
 GO(bit2fasm) {
     source ~/src/prjxray/database/artix7/settings.sh
     source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
-    $XRAY_BIT2FASM --verbose $1.bit > $1.fasm
+    $XRAY_BIT2FASM --verbose --canonical $1.bit > $1.fasm
 }
 
-GO(diffasm) {
-    # TODO clean up
-    colordiff -u3 <(grep $1 $2 | sed -e 's/X[0-9]\+Y[0-9]\+/X?Y?/' -e 's/[=\[].*//' | sort) <(grep $1 $3 | sed -e 's/X[0-9]\+Y[0-9]\+/X?Y?/' -e 's/[=\[].*//' | sort)
+GO(diffasm) (
+    FILTER1="s/_(X[0-9]+)?Y[0-9]+//g" # strip all _XnYn and _Yn
+    # FILTER1="s/_X[0-9]+Y[0-9]+//" # strip _XnYn
+    FILTER2="s/[=\[].*//"
+    FILTER_CMD="sed -E -e \"${FILTER1}\" -e \"${FILTER2}\" | sort -u"
+    colordiff --label "$2" --label "$3" -u3 \
+              <(grep $1 $2 | eval ${FILTER_CMD}) \
+              <(grep $1 $3 | eval ${FILTER_CMD})
+)
+
+GO(fasm2bit) {
+    source ~/src/prjxray/database/artix7/settings.sh
+    source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
+    BLOCK({{
+      $XRAY_FASM2FRAMES --db-root $XRAY_DATABASE_DIR/artix7 --sparse --roi $XRAY_DATABASE_DIR/artix7/harness/basys3/swbut/design.json $1.fasm $1.frames
+      $XRAY_TOOLS_DIR/xc7patch --frm_file $1.frames --output_file $1.bit --bitstream_file $XRAY_DATABASE_DIR/artix7/harness/basys3/swbut/design.bit --part_name xc7a35tcpg236-1 --part_file $XRAY_DATABASE_DIR/artix7/xc7a35tcpg236-1.yaml
+    }})
 }
