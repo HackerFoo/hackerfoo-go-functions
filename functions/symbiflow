@@ -144,8 +144,8 @@ save_project_as -force design.xpr}})
     }})
 }
 
+XRAY_DIR=$HOME/src/prjxray
 GO(write_bit) {
-    source ~/src/prjxray/database/artix7/settings.sh
     openocd -f $XRAY_DIR/utils/openocd/board-digilent-basys3.cfg -c "init; pld load 0 $1; exit" || return
 }
 

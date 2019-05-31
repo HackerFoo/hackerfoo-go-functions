@@ -29,5 +29,9 @@ GO(update_popr_eval) {
 }
 
 GO(ssh-hank) {
-    ssh home.hackerfoo.com -p 2222
+    ssh -L 13389:localhost:3389 home.hackerfoo.com -p 2222
+}
+
+GO(unload-ftdi) {
+    sudo kextunload -p -b com.FTDI.driver.FTDIUSBSerialDriver
 }
