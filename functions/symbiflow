@@ -155,7 +155,7 @@ function __sf_build() {
     elif [ ! -d ${SF_ROOT}/build ]; then
         make -C ${SF_ROOT} env
     fi
-    script --return --quiet --output-limit 32M --command "make -C ${SF_ROOT}/build $@" ${SF_ROOT}/build/build.log
+    script --return --quiet --output-limit 32M --command "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@" ${SF_ROOT}/build/build.log
 }
 
 define({{build_target}}, {{
@@ -266,4 +266,15 @@ GO(to_test) {
 
 GO(clear_cmake_cache) {
     rm -f ${SF_ROOT}/build/CMakeCache.txt
+}
+
+GO(bit2fasm) {
+    source ~/src/prjxray/database/artix7/settings.sh
+    source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
+    $XRAY_BIT2FASM --verbose $1.bit > $1.fasm
+}
+
+GO(diffasm) {
+    # TODO clean up
+    colordiff -u3 <(grep $1 $2 | sed -e 's/X[0-9]\+Y[0-9]\+/X?Y?/' -e 's/[=\[].*//' | sort) <(grep $1 $3 | sed -e 's/X[0-9]\+Y[0-9]\+/X?Y?/' -e 's/[=\[].*//' | sort)
 }

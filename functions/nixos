@@ -19,3 +19,7 @@ GO(build) {
         echo "Package name required."
     fi
 }
+
+GO(upgrade-channel) {
+    sudo nix-channel --add https://nixos.org/channels/nixos-$1 nixos
+}
