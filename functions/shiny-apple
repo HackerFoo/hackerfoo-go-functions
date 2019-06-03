@@ -1,7 +1,12 @@
 # -*- mode: sh -*-
 
 GO(rsync_gx1) {
-    rsync -rv --ignore-existing /Volumes/GX1/$1/ /Volumes/White/Pictures/GX1/$1/
+    if [ "$1" ]; then
+        rsync -rv --ignore-existing /Volumes/GX1/DCIM/$1_PANA/ /Volumes/White/Pictures/GX1/$1_PANA/
+    else
+        echo "missing argument"
+        (cd /Volumes/GX1/DCIM/; ls)
+    fi
 }
 
 POPR_DIR=${HOME}/src/poprc
