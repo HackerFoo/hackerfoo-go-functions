@@ -23,3 +23,7 @@ GO(build) {
 GO(upgrade-channel) {
     sudo nix-channel --add https://nixos.org/channels/nixos-$1 nixos
 }
+
+GO(install-with-channel) {
+    nix-env --arg pkgs "import (builtins.fetchTarball channel:$1) ({ config.allowUnfree = true; })" -f . -iA $2
+}
