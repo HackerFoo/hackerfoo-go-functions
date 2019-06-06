@@ -1,7 +1,10 @@
 # -*- mode: sh -*-
 
 GO(switch) {
-    sudo nixos-rebuild switch $@
+    BLOCK({{
+      sudo nixos-rebuild switch $@
+      sudo nix-collect-garbage --delete-older-than 30d
+    }})
 }
 
 GO(shell) {
@@ -26,4 +29,19 @@ GO(upgrade-channel) {
 
 GO(install-with-channel) {
     nix-env --arg pkgs "import (builtins.fetchTarball channel:$1) ({ config.allowUnfree = true; })" -f . -iA $2
+}
+
+# https://nixos.wiki/wiki/Cheatsheet#Adding_files_to_the_store
+GO(store-large-file) {
+    BLOCK({{
+      LARGE_FILE="`realpath $1`"
+      (sudo unshare -m bash) <<EOF
+set -x
+HASH=\$(nix-hash --type sha256 --flat --base32 ${LARGE_FILE})
+STOREPATH=\$(nix-store --print-fixed-path sha256 \${HASH} $(basename ${LARGE_FILE}))
+mount -o remount,rw /nix/store
+cp $LARGE_FILE \$STOREPATH
+printf "\$STOREPATH\n\n0\n" | nix-store --register-validity --reregister
+EOF
+    }})
 }
