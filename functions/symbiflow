@@ -294,7 +294,24 @@ GO(fasm2bit) {
     source ~/src/prjxray/database/artix7/settings.sh
     source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
     BLOCK({{
-      $XRAY_FASM2FRAMES --db-root $XRAY_DATABASE_DIR/artix7 --sparse --roi $XRAY_DATABASE_DIR/artix7/harness/basys3/swbut/design.json $1.fasm $1.frames
-      $XRAY_TOOLS_DIR/xc7patch --frm_file $1.frames --output_file $1.bit --bitstream_file $XRAY_DATABASE_DIR/artix7/harness/basys3/swbut/design.bit --part_name xc7a35tcpg236-1 --part_file $XRAY_DATABASE_DIR/artix7/xc7a35tcpg236-1.yaml
+      if [ "$2" == "noroi" ]; then
+          $XRAY_FASM2FRAMES --db-root $XRAY_DATABASE_DIR/artix7 \
+                            --sparse \
+                            $1.fasm $1.frames
+          $XRAY_TOOLS_DIR/xc7frames2bit --frm_file $1.frames \
+                                        --output_file $1.bit \
+                                        --part_name xc7a35tcpg236-1 \
+                                        --part_file $XRAY_DATABASE_DIR/artix7/xc7a35tcpg236-1.yaml
+      else
+          $XRAY_FASM2FRAMES --db-root $XRAY_DATABASE_DIR/artix7 \
+                            --sparse \
+                            --roi $XRAY_DATABASE_DIR/artix7/harness/basys3/swbut/design.json \
+                            $1.fasm $1.frames
+          $XRAY_TOOLS_DIR/xc7patch --frm_file $1.frames \
+                                   --output_file $1.bit \
+                                   --bitstream_file $XRAY_DATABASE_DIR/artix7/harness/basys3/swbut/design.bit \
+                                   --part_name xc7a35tcpg236-1 \
+                                   --part_file $XRAY_DATABASE_DIR/artix7/xc7a35tcpg236-1.yaml
+      fi
     }})
 }
