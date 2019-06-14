@@ -29,6 +29,7 @@ GO(update_popr_eval) {
       make js/eval.js BUILD=release-with-asserts
       cd ${HACKERFOO_DIR}/app_engine
       cp ${POPR_DIR}/js/eval.{js,wasm} public/js
+      open public/eval.html
       gcloud app deploy
     }})
 }
