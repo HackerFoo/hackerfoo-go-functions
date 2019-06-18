@@ -1,0 +1,10 @@
+# -*- mode: sh -*-
+
+GO(poprc-push-startle) {
+  BLOCK({{
+    cd ~/src/startle
+    git config receive.denyCurrentBranch warn
+    cd ~/src/poprc
+    git subtree push --prefix=startle ~/src/startle master
+  }})
+}
