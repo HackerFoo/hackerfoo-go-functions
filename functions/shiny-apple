@@ -35,7 +35,11 @@ GO(update_popr_eval) {
 }
 
 GO(ssh-hank) {
-    ssh -L 13389:localhost:3389 home.hackerfoo.com -p 2222
+    ssh -C -L 13389:localhost:3389 home.hackerfoo.com -p 2222
+}
+
+GO(tmux-hank) {
+    ssh -C -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
 }
 
 GO(unload-ftdi) {
