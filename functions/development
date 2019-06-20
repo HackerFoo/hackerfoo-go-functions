@@ -8,3 +8,12 @@ GO(poprc-push-startle) {
     git subtree push --prefix=startle ~/src/startle master
   }})
 }
+
+POPRC_HOME=~/src/poprc
+GO(popr) (
+    cd ${POPRC_HOME}
+    if [ ! -f eval ]; then
+        make eval
+    fi
+    ./eval -lo *.ppr -im $@
+)
