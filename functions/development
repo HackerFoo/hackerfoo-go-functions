@@ -17,3 +17,15 @@ GO(popr) (
     fi
     ./eval -lo *.ppr -im $@
 )
+
+GO(quick-git) {
+    if git rev-parse --git-dir &> /dev/null
+    then
+        git status
+        git log
+    else
+        git init
+        git add $@
+        git commit -m "initial commit"
+    fi
+}
