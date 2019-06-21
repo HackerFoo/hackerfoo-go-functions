@@ -29,3 +29,7 @@ GO(quick-git) {
         git commit -m "initial commit"
     fi
 }
+
+GO(emacs) {
+    emacsclient -c -a '' $@
+}
