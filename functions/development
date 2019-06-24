@@ -33,3 +33,31 @@ GO(quick-git) {
 GO(emacs) {
     emacsclient -c -a '' $@
 }
+
+# src dst NAME=VAL ...
+GO(scaffold) (
+    shopt -s globstar nullglob
+    SRC=$1
+    DST=$2
+    shift 2
+    echo "# scaffold: ${SRC} -> ${DST}, $@" > run-scaffold.sh
+    DEFINES=""
+    for d in $@; do
+        DEFINES="${DEFINES} -D$d"
+    done
+    pushd ${SRC} > /dev/null
+    FILES=( **/*.m4 )
+    popd > /dev/null
+    for f in "${FILES[@]}"; do
+        OUT=`echo "$f" | sed 's/\.m4$//' | m4 ${DEFINES} -`
+        echo "mkdir -p $(dirname ${DST}/${OUT})" >> run-scaffold.sh
+        echo "m4 ${DEFINES} ${SRC}/$f > ${DST}/${OUT}" >> run-scaffold.sh
+    done
+    cat run-scaffold.sh
+    read -p "Run it? (y/N) " RESPONSE
+    RESPONSE=${RESPONSE,,} # tolower
+    if [[ "${RESPONSE}" =~ ^(yes|y)$ ]]; then
+        echo "running run-scaffold.sh"
+        bash run-scaffold.sh
+    fi
+)
