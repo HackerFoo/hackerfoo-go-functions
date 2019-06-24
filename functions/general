@@ -1,0 +1,5 @@
+# -*- mode: sh -*-
+
+GO(show-log) {
+  sudo journalctl -xeu $1
+}
