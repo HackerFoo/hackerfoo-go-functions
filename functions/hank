@@ -5,8 +5,16 @@ GO(connect-headphones) {
     DEVICE_NAME="Cone of Silence"
     PS=( `ps -u gdm | grep -m 1 pulseaudio` )
     sudo kill ${PS[0]}
-    DEVICE=( `echo paired-devices | bluetoothctl | grep "$DEVICE_NAME"` )
+    DEVICE=( `echo paired-devices | bluetoothctl | grep "^Device .*$DEVICE_NAME"` )
     sleep 2
+    echo "connect ${DEVICE[1]}" | bluetoothctl
+  }})
+}
+
+GO(connect-trackpad) {
+  BLOCK({{
+    DEVICE_NAME="Trackpad"
+    DEVICE=( `echo paired-devices | bluetoothctl | grep "^Device .*$DEVICE_NAME"` )
     echo "connect ${DEVICE[1]}" | bluetoothctl
   }})
 }
