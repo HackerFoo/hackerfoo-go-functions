@@ -157,8 +157,9 @@ GO(write_bit) {
     openocd -f $XRAY_DIR/utils/openocd/board-digilent-basys3.cfg -c "init; pld load 0 $1; exit" || return
 }
 
-function __sf_build() {
+GO(sf_build) {
     if [ ! -d ${SF_ROOT} ]; then
+        echo "SF_ROOT not set correctly"
         return
     elif [ ! -d ${SF_ROOT}/build ]; then
         make -C ${SF_ROOT} env
@@ -168,7 +169,7 @@ function __sf_build() {
 
 define({{build_target}}, {{
     if [ -n "$2" ]; then
-        __sf_build $1_$2 || return
+        GO_CALL(sf_build) $1_$2 || return
     fi}})
 
 GO(shifter) {
@@ -229,7 +230,7 @@ GO(set_sf) {
 
 GO(scalable_proc) {
     BLOCK({{
-      __sf_build top_$1_prog
+      GO_CALL(sf_build) top_$1_prog
       ${SF_ROOT}/tests/9-scalable_proc/utils/receiver.py --baud 500000
     }})
 }
