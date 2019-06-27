@@ -178,8 +178,23 @@ GO(error_command) (
 GO(retry_error_command) (
     CMD="`GO_CALL(error_command)`"
     echo "${CMD}"
-    if GO_CALL(prompt) "Run this?"; then
-        eval "${CMD}"
+    if [ -f "$1" ]; then
+        if GO_CALL(prompt) "Run this while watching $1?"; then
+            TIME=0
+            while true; do
+                NEW_TIME="$(stat -c %Y $1)"
+                if [ $NEW_TIME -gt $TIME ]; then
+                    clear
+                    (eval "${CMD}")
+                    TIME=$NEW_TIME
+                fi
+                sleep 1
+            done
+        fi
+    else
+        if GO_CALL(prompt) "Run this?"; then
+            eval "${CMD}"
+        fi
     fi
 )
 
