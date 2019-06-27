@@ -169,10 +169,18 @@ GO(sf_build) {
     script --return --quiet --output-limit 32M --command "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@" ${SF_ROOT}/build/build.log
 }
 
-GO(show_error_command) (
+GO(error_command) (
     RESULTS=(`grep -m 1 '^make.*\*\*\*.*Error' ${SF_ROOT}/build/build.log \
                    | sed -n 's/^.*\*\*\* \[\([^:]*\):\([0-9]\+\).*$/\2 \1/p'`)
     sed -n ${RESULTS[0]}p ${RESULTS[1]}
+)
+
+GO(retry_error_command) (
+    CMD="`GO_CALL(error_command)`"
+    echo "${CMD}"
+    if GO_CALL(prompt) "Run this?"; then
+        eval "${CMD}"
+    fi
 )
 
 define({{build_target}}, {{

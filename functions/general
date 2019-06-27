@@ -3,3 +3,13 @@
 GO(show-log) {
   sudo journalctl -xeu $1
 }
+
+GO(prompt) (
+    read -p "$1 (y/N) " RESPONSE
+    RESPONSE=${RESPONSE,,} # tolower
+    if [[ "${RESPONSE}" =~ ^(yes|y)$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+)
