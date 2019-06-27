@@ -6,6 +6,8 @@ GO(sf) {
     cd ${SF_ROOT}
     if [ "$FHS_USER_ENV" != "true" ]
     then
+        rm -f ~/.gcroots/sf-shell
+        nix-instantiate ~/nix/sf-shell.nix --add-root ~/.gcroots/sf-shell --indirect &> /dev/null
         nix-shell ~/nix/sf-shell.nix
     fi
 }
