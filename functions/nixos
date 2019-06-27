@@ -3,6 +3,13 @@
 GO(switch) {
     BLOCK({{
       sudo nixos-rebuild switch $@
+    }})
+}
+
+GO(upgrade) {
+    BLOCK({{
+      sudo nixos-rebuild switch --upgrade
+      nix-env --upgrade
       sudo nix-collect-garbage --delete-older-than 30d
     }})
 }
