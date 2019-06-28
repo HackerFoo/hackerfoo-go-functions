@@ -4,6 +4,14 @@ GO(show-log) {
   sudo journalctl -xeu $1
 }
 
+GO(string_to_files) {
+    for w in $1; do
+        if [ -f "$w" ]; then
+            printf "$w "
+        fi
+    done
+}
+
 GO(prompt) (
     read -p "$1 (y/N) " RESPONSE
     RESPONSE=${RESPONSE,,} # tolower
