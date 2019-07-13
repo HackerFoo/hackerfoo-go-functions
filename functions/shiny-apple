@@ -35,11 +35,11 @@ GO(update_popr_eval) {
 }
 
 GO(ssh-hank) {
-    ssh -C -L 13389:localhost:3389 home.hackerfoo.com -p 2222
+    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2222
 }
 
 GO(tmux-hank) {
-    ssh -C -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
+    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
 }
 
 GO(unload-ftdi) {
