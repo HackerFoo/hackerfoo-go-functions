@@ -16,7 +16,7 @@ GO(check_popr) {
       cd ${POPR_DIR}
       make clean
       make BUILD=release
-      make CC=gcc-8 BUILD=release
+      make CC=gcc-9 BUILD=release
     }})
 }
 

@@ -61,3 +61,7 @@ GO(scaffold) (
         bash run-scaffold.sh
     fi
 )
+
+GO(web-server) {
+    python -m SimpleHTTPServer
+}
