@@ -24,7 +24,7 @@ GO(monitor) (
         SCREEN="$(lscpu; sensors)"
         clear
         echo "${SCREEN}"
-        sleep 0.1
+        sleep 0.5
     done
 )
 
@@ -34,4 +34,17 @@ GO(trim) {
     else
         export PROMPT_DIRTRIM=3
     fi
+}
+
+GO(ssh-rev) {
+    BLOCK({{
+      echo "turning off wireless power saving..."
+      sudo iw dev wlp6s0 set power_save off
+      echo "connecting tunnel..."
+      autossh -M 10984 -C -c aes128-ctr -o IPQoS=af21 -R 2222:localhost:22 dev.hackerfoo.com -N
+    }})
+}
+
+GO(tmux-remote) {
+    ssh -C -c aes128-ctr -o IPQoS=af21 dev.hackerfoo.com -t ssh -c aes128-ctr -p 2222 localhost -t tmux $@
 }
