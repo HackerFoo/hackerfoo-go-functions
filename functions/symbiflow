@@ -177,9 +177,10 @@ GO(error_command) (
 
 GO(retry_error_command) (
     CMD="`GO_CALL(error_command)`"
-    echo "${CMD}"
     FILES="`GO_CALL(string_to_files) \"${CMD}\"`"
     if [ "$1" == "watch" ]; then
+        shift
+        echo "${CMD} $@"
         if GO_CALL(prompt) "Run this on files change?"; then
             TIME=`date +%s`
             while true; do
@@ -187,7 +188,7 @@ GO(retry_error_command) (
                     NEW_TIME="$(stat -c %Y $f)"
                     if [ $NEW_TIME -gt $TIME ]; then
                         clear
-                        (eval "${CMD}")
+                        (eval "${CMD} $@")
                         TIME=$(($NEW_TIME + 3))
                         break
                     fi
@@ -196,8 +197,9 @@ GO(retry_error_command) (
             done
         fi
     else
+        echo "${CMD} $@"
         if GO_CALL(prompt) "Run this?"; then
-            eval "${CMD}"
+            eval "${CMD} $@"
         fi
     fi
 )
