@@ -355,3 +355,8 @@ GO(fasm2bit) {
       fi
     }})
 }
+
+GO(find-makefile) {
+    grep -B 1 "cmake_echo_color.*\".*$1.*\"" ${SF_ROOT}/build/CMakeFiles/Makefile2 | head -n 1 | cut -d' ' -f 3
+    grep -lr "cmake_echo_color.*\".*$1.*\"" ${SF_ROOT}/build --include build.make
+}
