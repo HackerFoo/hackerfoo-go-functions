@@ -172,7 +172,11 @@ GO(sf_build) {
 GO(error_command) (
     RESULTS=(`grep -m 1 '^make.*\*\*\*.*Error' ${SF_ROOT}/build/build.log \
                    | sed -n 's/^.*\*\*\* \[\([^:]*\):\([0-9]\+\).*$/\2 \1/p'`)
-    sed -n ${RESULTS[0]}p ${SF_ROOT}/build/${RESULTS[1]}
+    if [ "$1" == "where" ]; then
+        echo "${SF_ROOT}/build/${RESULTS[1]}:${RESULTS[0]}"
+    else
+        sed -n ${RESULTS[0]}p ${SF_ROOT}/build/${RESULTS[1]}
+    fi
 )
 
 GO(retry_error_command) (
@@ -197,6 +201,10 @@ GO(retry_error_command) (
             done
         fi
     else
+        if [ "$1" == "pydebug" ]; then
+            shift
+            CMD=${CMD//python3/python3 -m pdb}
+        fi
         echo "${CMD} $@"
         if GO_CALL(prompt) "Run this?"; then
             eval "${CMD} $@"
