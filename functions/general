@@ -21,3 +21,23 @@ GO(prompt) (
         return 1
     fi
 )
+
+NOTIFY_MIN_TIME=30
+GO(notify_start) {
+    NOTIFY_START_TIME=`date +%s`
+}
+
+NOTIFY_PIPE=~/notify
+GO(notify) {
+    if [ -n "${NOTIFY_START_TIME}" ]; then
+        (
+            NOW=`date +%s`
+            DURATION=$((${NOW} - ${NOTIFY_START_TIME}))
+            # ${NOTIFY_PIPE} should be a symlink to an mm named pipe: https://gitlab.com/meutraa/mm/tree/master
+            if [ -p "${NOTIFY_PIPE}" -a "${DURATION}" -ge "${NOTIFY_MIN_TIME}" ]; then
+                echo "$@" > ${NOTIFY_PIPE}
+            fi
+        )
+        unset NOTIFY_START_TIME
+    fi
+}
