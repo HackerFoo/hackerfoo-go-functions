@@ -166,7 +166,13 @@ GO(sf_build) {
     elif [ ! -d ${SF_ROOT}/build ]; then
         make -C ${SF_ROOT} env
     fi
-    script --return --quiet --output-limit 32M --command "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@" ${SF_ROOT}/build/build.log
+    echo "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@; exit" | \
+        script --return --quiet --output-limit 32M ${SF_ROOT}/build/build.log
+
+    # ~/notify should be a symlink to an mm named pipe: https://gitlab.com/meutraa/mm/tree/master
+    if [ -p ~/notify ]; then
+        echo "finished sf_build: $@" > ~/notify
+    fi
 }
 
 GO(error_command) (

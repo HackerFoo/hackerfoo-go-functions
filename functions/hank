@@ -51,3 +51,8 @@ GO(ssh-rev) {
 GO(tmux-remote) {
     ssh -C -c aes128-ctr -o IPQoS=af21 dev.hackerfoo.com -t ssh -c aes128-ctr -p 2222 localhost -t tmux $@
 }
+
+GO(mm) (
+    read -p "password: " -s PASS
+    mm -d ~/mm -s https://sandbox.hackerfoo.com:8448 -u notification_bot -p $PASS
+)
