@@ -159,7 +159,7 @@ GO(write_bit) {
     openocd -f $XRAY_DIR/utils/openocd/board-digilent-basys3.cfg -c "init; pld load 0 $1; exit" || return
 }
 
-GO(sf_build) {
+GO(sf_build) (
     if [ ! -d ${SF_ROOT} ]; then
         echo "SF_ROOT not set correctly"
         return
@@ -169,8 +169,15 @@ GO(sf_build) {
     GO_CALL(notify_start)
     echo "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@; exit $?" | \
         script --return --quiet --output-limit 32M ${SF_ROOT}/build/build.log
-    GO_CALL(notify) "sf_build($?): $@"
-}
+
+    ERR="`GO_CALL(error_message)`"
+    RET=$?
+    if [ $RET == 0 ]; then
+        GO_CALL(notify) "sf_build $@: ${ERR}"
+    else
+        GO_CALL(notify) "sf_build $@: SUCCESS"
+    fi
+)
 
 GO(error_command) (
     RESULTS=(`grep -m 1 '^make.*\*\*\*.*Error' ${SF_ROOT}/build/build.log \
@@ -214,6 +221,10 @@ GO(retry_error_command) (
         fi
     fi
 )
+
+GO(error_message) {
+    grep -m 1 -ie 'error.*:' ${SF_ROOT}/build/build.log
+}
 
 define({{build_target}}, {{
     if [ -n "$2" ]; then
