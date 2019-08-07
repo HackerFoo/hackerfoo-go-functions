@@ -167,8 +167,8 @@ GO(sf_build) (
         make -C ${SF_ROOT} env
     fi
     GO_CALL(notify_start)
-    echo "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@; exit $?" | \
-        script --return --quiet --output-limit 32M ${SF_ROOT}/build/build.log
+    echo "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@; exit" | \
+        script --quiet --output-limit 32M ${SF_ROOT}/build/build.log
 
     ERR="`GO_CALL(error_message)`"
     RET=$?
@@ -183,9 +183,9 @@ GO(error_command) (
     RESULTS=(`grep -m 1 '^make.*\*\*\*.*Error' ${SF_ROOT}/build/build.log \
                    | sed -n 's/^.*\*\*\* \[\([^:]*\):\([0-9]\+\).*$/\2 \1/p'`)
     if [ "$1" == "where" ]; then
-        echo "${SF_ROOT}/build/${RESULTS[1]}:${RESULTS[0]}"
+        echo "${SF_ROOT}/build/${RESULTS[1]}:${RESULTS[0]}" | sed "s+${SF_ROOT}+\${SF_ROOT}+g"
     else
-        sed -n ${RESULTS[0]}p ${SF_ROOT}/build/${RESULTS[1]}
+        sed -n ${RESULTS[0]}p ${SF_ROOT}/build/${RESULTS[1]} | sed "s+${SF_ROOT}+\${SF_ROOT}+g"
     fi
 )
 
