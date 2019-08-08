@@ -49,3 +49,7 @@ GO(in-tmux) {
         tmux new-session -s "$1" "source ~/.go.sh/load; go $@"
     fi
 }
+
+GO(check-m4) {
+    m4 -DGO_CMD=${__GO_CMD} ${__GO_DIR}/macros.m4 $1
+}
