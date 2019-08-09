@@ -213,7 +213,7 @@ GO(retry_error_command) (
     else
         if [ "$1" == "pydebug" ]; then
             shift
-            CMD=${CMD//python3/python3 -m pdb}
+            CMD=${CMD//python3/python3 -m pdb -c continue}
         fi
         echo "${CMD} $@"
         if GO_CALL(prompt) "Run this?"; then
@@ -432,10 +432,16 @@ SELECT COALESCE(phy_tile.name, site.name) || "." || wire_in_tile.name FROM wire
   WHERE wire.pkey = $PKEY;
 }})
 
+QUERY(WIRE_IN_TILE, {{
+SELECT tile_type.name || "." || wire_in_tile.name FROM wire_in_tile
+  LEFT JOIN tile_type ON (wire_in_tile.tile_type_pkey = tile_type.pkey)
+  WHERE wire_in_tile.pkey = $PKEY;
+}})
+
 QUERY(GRAPH_NODE, {{
 SELECT COALESCE(phy_tile.name, site.name) || "." || wire_in_tile.name FROM graph_node
-  LEFT JOIN node on (graph_node.node_pkey = node.pkey)
-  LEFT JOIN wire on (node.site_wire_pkey = wire.pkey)
+  LEFT JOIN node ON (graph_node.node_pkey = node.pkey)
+  LEFT JOIN wire ON (node.site_wire_pkey = wire.pkey)
   LEFT JOIN tile ON (wire.tile_pkey = tile.pkey)
   LEFT JOIN phy_tile ON (tile.phy_tile_pkey = phy_tile.pkey)
   LEFT JOIN site_as_tile ON (tile.site_as_tile_pkey = site_as_tile.pkey)
