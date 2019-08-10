@@ -223,7 +223,7 @@ GO(retry_error_command) (
 )
 
 GO(error_message) {
-    grep -m 1 -ie 'error.*:' ${SF_ROOT}/build/build.log
+    grep -m 1 -iE 'error.*(:|$)' ${SF_ROOT}/build/build.log
 }
 
 define({{build_target}}, {{
