@@ -167,8 +167,14 @@ GO(sf_build) (
         make -C ${SF_ROOT} env
     fi
     GO_CALL(notify_start)
-    echo "make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@; exit" | \
-        script --quiet --output-limit 32M ${SF_ROOT}/build/build.log
+    RUNME=$(mktemp --tmpdir runme.sh.XXXXXXXXXX)
+    FILE_VAR(${RUNME}, {{
+#!/usr/bin/env bash
+make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@
+}})
+    chmod +x ${RUNME}
+    script --quiet --output-limit 32M --command ${RUNME} ${SF_ROOT}/build/build.log
+    rm -f ${RUNME}
 
     ERR="`GO_CALL(error_message)`"
     RET=$?
