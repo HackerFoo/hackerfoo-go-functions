@@ -56,3 +56,8 @@ GO(mm) (
     read -p "password: " -s PASS
     mm -d ~/mm -s https://sandbox.hackerfoo.com:8448 -u notification_bot -p $PASS
 )
+
+GO(scroll) {
+    xinput --set-prop "Logitech USB Trackball" "libinput Scroll Method Enabled" 0 0 1
+    xinput --set-prop "Logitech USB Trackball" "libinput Button Scrolling Button" 8
+}
