@@ -485,5 +485,5 @@ GO(find-rr-node) (
         time xmllint --xpath "rr_graph/rr_nodes/node | rr_graph/rr_edges/edge" --format ${RR_GRAPH} | lz4 > ${RR_GRAPH_PREPROCESSED}
         echo "done."
     fi
-    lz4cat ${RR_GRAPH_PREPROCESSED} | grep ${NODE_ID}
+    lz4cat ${RR_GRAPH_PREPROCESSED} | rg ${NODE_ID}
 )
