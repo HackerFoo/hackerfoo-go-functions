@@ -423,7 +423,7 @@ SELECT COALESCE(phy_tile.name, site.name) FROM tile
 
 QUERY(SITE, {{
 SELECT site_type.name || "_" || site.name FROM site
-  LEFT JOIN site_type ON (site.site_type_pkey = site_type.pkey)
+  INNER JOIN site_type ON (site.site_type_pkey = site_type.pkey)
   WHERE site.pkey = $PKEY;
 }})
 
@@ -449,7 +449,7 @@ SELECT COALESCE(phy_tile.name, site.name) || "." || wire_in_tile.name FROM wire
 
 QUERY(WIRE_IN_TILE, {{
 SELECT tile_type.name || "." || wire_in_tile.name FROM wire_in_tile
-  LEFT JOIN tile_type ON (wire_in_tile.tile_type_pkey = tile_type.pkey)
+  INNER JOIN tile_type ON (wire_in_tile.tile_type_pkey = tile_type.pkey)
   WHERE wire_in_tile.pkey = $PKEY;
 }})
 
@@ -466,46 +466,83 @@ SELECT COALESCE(phy_tile.name, site.name) || "." || wire_in_tile.name FROM graph
 }})
 )
 
-GO(show-route) (
+GO(show-wires) (
     PKEY=$1
 
-QUERY(ROUTE, {{
+QUERY(GRAPH_WIRES, {{
 SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_node
-  LEFT JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
-  LEFT JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
-  LEFT JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+  INNER JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
+  INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+  INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
   WHERE graph_node.pkey = $PKEY;
+}})
+
+QUERY(NODE_WIRES, {{
+SELECT phy_tile.name || "/" || wire_in_tile.name FROM wire
+  INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+  INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+  WHERE wire.node_pkey = $PKEY;
 }})
 )
 
-GO(get_graph_node) (
-QUERY(GRAPH_NODE, {{
-SELECT graph_node.pkey, node.classification FROM graph_node
-  LEFT JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
-  LEFT JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
-  LEFT JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
-  LEFT JOIN node ON (graph_node.node_pkey = node.pkey)
-  WHERE phy_tile.name = "$1" AND
-        wire_in_tile.name = "$2";
+GO(graph_node_info) (
+    if [ -z "$1" ]; then
+        return
+    fi
+
+    QUERY(SOURCES, {{
+    SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_edge
+      INNER JOIN graph_node ON (graph_edge.src_graph_node_pkey = graph_node.pkey)
+      INNER JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
+      INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+      INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+      WHERE graph_edge.dest_graph_node_pkey = $1;
+    }})
+
+    QUERY(SINKS, {{
+    SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_edge
+      INNER JOIN graph_node ON (graph_edge.dest_graph_node_pkey = graph_node.pkey)
+      INNER JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
+      INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+      INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+      WHERE graph_edge.src_graph_node_pkey = $1;
+    }})
+)
+
+GO(get_node) (
+    IFS="/"
+    NAME=( $1 )
+    unset IFS
+
+QUERY(NODE, {{
+SELECT node.pkey, node.classification FROM node
+  INNER JOIN wire ON (node.pkey = wire.node_pkey)
+  INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+  INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+  WHERE phy_tile.name = "${NAME[0]}" AND
+        wire_in_tile.name = "${NAME[1]}";
 }})
 
-QUERY(SOURCES, {{
-SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_edge
-  LEFT JOIN graph_node ON (graph_edge.src_graph_node_pkey = graph_node.pkey)
-  LEFT JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
-  LEFT JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
-  LEFT JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
-  WHERE graph_edge.dest_graph_node_pkey = ${GRAPH_NODE};
-}})
+if [ -n "${NODE}" ]; then
+  CLASSIFICATION=(NULL NULL CHANNEL EDGES_TO_CHANNEL EDGE_WITH_MUX)
+  echo "CLASSIFICATION: ${CLASSIFICATION[${NODE[1]}]}"
 
-QUERY(SINKS, {{
-SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_edge
-  LEFT JOIN graph_node ON (graph_edge.dest_graph_node_pkey = graph_node.pkey)
-  LEFT JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
-  LEFT JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
-  LEFT JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
-  WHERE graph_edge.src_graph_node_pkey = ${GRAPH_NODE};
-}})
+  QUERY(WIRES, {{
+  SELECT phy_tile.name || "/" || wire_in_tile.name FROM wire
+    INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+    INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+    WHERE wire.node_pkey = ${NODE};
+  }})
+
+  QUERY(GRAPH_NODE, {{
+  SELECT pkey FROM graph_node
+    WHERE node_pkey = ${NODE[0]};
+  }})
+
+  if [ -n "${GRAPH_NODE}" ]; then
+      GO_CALL(graph_node_info) "${GRAPH_NODE}"
+  fi
+fi
 )
 
 undefine({{QUERY}})dnl
