@@ -475,6 +475,36 @@ SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_node
 }})
 )
 
+GO(get_graph_node) (
+QUERY(GRAPH_NODE, {{
+SELECT graph_node.pkey, node.classification FROM graph_node
+  LEFT JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
+  LEFT JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+  LEFT JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+  LEFT JOIN node ON (graph_node.node_pkey = node.pkey)
+  WHERE phy_tile.name = "$1" AND
+        wire_in_tile.name = "$2";
+}})
+
+QUERY(SOURCES, {{
+SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_edge
+  LEFT JOIN graph_node ON (graph_edge.src_graph_node_pkey = graph_node.pkey)
+  LEFT JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
+  LEFT JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+  LEFT JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+  WHERE graph_edge.dest_graph_node_pkey = ${GRAPH_NODE};
+}})
+
+QUERY(SINKS, {{
+SELECT phy_tile.name || "/" || wire_in_tile.name FROM graph_edge
+  LEFT JOIN graph_node ON (graph_edge.dest_graph_node_pkey = graph_node.pkey)
+  LEFT JOIN wire ON (graph_node.node_pkey = wire.node_pkey)
+  LEFT JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+  LEFT JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+  WHERE graph_edge.src_graph_node_pkey = ${GRAPH_NODE};
+}})
+)
+
 undefine({{QUERY}})dnl
 
 GO(find-rr-node) (
