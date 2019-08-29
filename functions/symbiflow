@@ -180,6 +180,7 @@ make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@
     RET=$?
     if [ $RET == 0 ]; then
         GO_CALL(notify) "sf_build $@: ${ERR}"
+        echo "ERROR: ${ERR}"
     else
         GO_CALL(notify) "sf_build $@: SUCCESS"
     fi
@@ -229,7 +230,7 @@ GO(retry_error_command) (
 )
 
 GO(error_message) {
-    grep -m 1 -iE 'error.*(:|$)' ${SF_ROOT}/build/build.log
+    grep -m 1 -iE '(error\>)|(cannot route)' ${SF_ROOT}/build/build.log
 }
 
 define({{build_target}}, {{
