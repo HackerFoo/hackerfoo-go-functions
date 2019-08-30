@@ -390,19 +390,23 @@ GO(find-makefile) {
     grep -lr "cmake_echo_color.*\".*$1.*\"" ${SF_ROOT}/build --include build.make
 }
 
-#CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db
-CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/channels.db
+CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db
+#CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/channels.db
 define({{QUERY}}, {{
+IFS="|"
 $1=( $(sqlite3 ${CHANNELS_DB} <<EOF
-.separator " "
+.separator "|" "|"
 .nullvalue "NULL"
 $2
 EOF
 ) )
+unset IFS
 if [[ "${$1[@]}" ]]; then
-    if [[ "${$1[@]}" == *$'\n'* ]]; then
+    if [[ "${#$1[@]}" -gt 5 ]]; then
         echo "# $1"
-        echo "${$1[@]}"
+        for i in "${$1[@]}"; do
+            echo "$i"
+        done
     else
         echo "$1: ${$1[@]}"
     fi
@@ -485,7 +489,7 @@ SELECT phy_tile.name || "/" || wire_in_tile.name FROM wire
 }})
 )
 
-GO(graph_node_info) (
+GO(graph_edges) (
     if [ -z "$1" ]; then
         return
     fi
@@ -528,7 +532,8 @@ if [ -n "${NODE}" ]; then
   echo "CLASSIFICATION: ${CLASSIFICATION[${NODE[1]}]}"
 
   QUERY(WIRES, {{
-  SELECT phy_tile.name || "/" || wire_in_tile.name FROM wire
+  SELECT phy_tile.name || "/" || wire_in_tile.name || " " ||
+         "(" || phy_tile.grid_x || "," || phy_tile.grid_y || ")" FROM wire
     INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
     INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
     WHERE wire.node_pkey = ${NODE};
@@ -538,10 +543,6 @@ if [ -n "${NODE}" ]; then
   SELECT pkey FROM graph_node
     WHERE node_pkey = ${NODE[0]};
   }})
-
-  if [ -n "${GRAPH_NODE}" ]; then
-      GO_CALL(graph_node_info) "${GRAPH_NODE}"
-  fi
 fi
 )
 
