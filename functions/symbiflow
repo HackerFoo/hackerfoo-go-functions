@@ -392,6 +392,16 @@ GO(find-makefile) {
 
 CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db
 #CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/channels.db
+
+GO(select-channels-db) {
+    echo "Which channels.db?"
+    select db in `find ${SF_ROOT}/build/ -name channels.db`; do
+        CHANNELS_DB=${db}
+        break
+    done
+}
+
+
 define({{QUERY}}, {{
 IFS="|"
 $1=( $(sqlite3 ${CHANNELS_DB} <<EOF
@@ -442,7 +452,7 @@ SELECT name FROM pip_in_tile
 }})
 
 QUERY(WIRE, {{
-SELECT COALESCE(phy_tile.name, site.name) || "." || wire_in_tile.name FROM wire
+SELECT COALESCE(phy_tile.name, site.name) || "/" || wire_in_tile.name FROM wire
   LEFT JOIN tile ON (wire.tile_pkey = tile.pkey)
   LEFT JOIN phy_tile ON (tile.phy_tile_pkey = phy_tile.pkey)
   LEFT JOIN site_as_tile ON (tile.site_as_tile_pkey = site_as_tile.pkey)
@@ -452,13 +462,13 @@ SELECT COALESCE(phy_tile.name, site.name) || "." || wire_in_tile.name FROM wire
 }})
 
 QUERY(WIRE_IN_TILE, {{
-SELECT tile_type.name || "." || wire_in_tile.name FROM wire_in_tile
+SELECT tile_type.name || "/" || wire_in_tile.name FROM wire_in_tile
   INNER JOIN tile_type ON (wire_in_tile.tile_type_pkey = tile_type.pkey)
   WHERE wire_in_tile.pkey = $PKEY;
 }})
 
 QUERY(GRAPH_NODE, {{
-SELECT COALESCE(phy_tile.name, site.name) || "." || wire_in_tile.name FROM graph_node
+SELECT COALESCE(phy_tile.name, site.name) || "/" || wire_in_tile.name FROM graph_node
   LEFT JOIN node ON (graph_node.node_pkey = node.pkey)
   LEFT JOIN wire ON (node.site_wire_pkey = wire.pkey)
   LEFT JOIN tile ON (wire.tile_pkey = tile.pkey)
@@ -546,11 +556,53 @@ if [ -n "${NODE}" ]; then
 fi
 )
 
+GO(find-wire-at) (
+    WIRE=$1
+    LOC=($2 $3)
+
+  QUERY(WIRES, {{
+  SELECT phy_tile.name || "/" || wire_in_tile.name FROM wire
+    INNER JOIN wire_in_tile ON (wire.wire_in_tile_pkey = wire_in_tile.pkey)
+    INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+    INNER JOIN tile ON (wire.tile_pkey = tile.pkey)
+    WHERE wire_in_tile.name = "${WIRE}" AND
+          tile.grid_x = ${LOC[0]} AND
+          tile.grid_y = ${LOC[1]};
+  }})
+)
+
+GO(list-tiles-at) (
+    LOC=($1 $2)
+
+  QUERY(TILE_TYPE, {{
+  SELECT tile_type.name FROM tile
+    INNER JOIN tile_type ON (tile.tile_type_pkey = tile_type.pkey)
+    WHERE tile.grid_x = ${LOC[0]} AND
+          tile.grid_y = ${LOC[1]};
+  }})
+
+#  QUERY(PHY_TILES, {{
+#  SELECT DISTINCT phy_tile.name FROM wire
+#    INNER JOIN phy_tile ON (wire.phy_tile_pkey = phy_tile.pkey)
+#    INNER JOIN tile ON (wire.tile_pkey = tile.pkey)
+#    WHERE tile.grid_x = ${LOC[0]} AND
+#          tile.grid_y = ${LOC[1]};
+#  }})
+
+  QUERY(PHY_TILES, {{
+  SELECT DISTINCT phy_tile.name FROM tile_map
+    INNER JOIN phy_tile ON (tile_map.phy_tile_pkey = phy_tile.pkey)
+    INNER JOIN tile ON (tile_map.tile_pkey = tile.pkey)
+    WHERE tile.grid_x = ${LOC[0]} AND
+          tile.grid_y = ${LOC[1]};
+  }})
+)
+
 undefine({{QUERY}})dnl
 
 GO(find-rr-node) (
     NODE_ID=$1
-    RR_GRAPH=${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3-x1y0_test.rr_graph.virt.xml
+    RR_GRAPH=${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3-x1y0_test.rr_graph.real.xml
     RR_GRAPH_PREPROCESSED=${RR_GRAPH}.pp.lz4
     if [ ! -f ${RR_GRAPH_PREPROCESSED} -o ${RR_GRAPH} -nt ${RR_GRAPH_PREPROCESSED} ]; then
         echo "preprocessing ${RR_GRAPH} ..."
@@ -564,4 +616,8 @@ GO(lookup-rr-node-in-db) {
     python3 ${SF_ROOT}/xc7/utils/prjxray_lookup_inode.py \
             --rrgraph_node_map ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3-x1y0_test.rr_graph.real.xml.node_map.pickle \
             --connection_database ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db --inode $1
+}
+
+GO(open_channels_db) {
+    sqlite3 ${CHANNELS_DB}
 }
