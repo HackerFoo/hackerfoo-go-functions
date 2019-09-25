@@ -67,5 +67,5 @@ GO(web-server)
 GOPY(pytest)
   import os
   print("Hi {}!".format(os.getlogin()))
-  for i in range(5):
-    print("i = {}".format(i))
+  for i, arg in enumerate(argv):
+    print("arg {} was: {}".format(i, arg))
