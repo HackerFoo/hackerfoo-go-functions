@@ -47,4 +47,4 @@ GO(in-tmux)
     fi
 
 GO(check-m4)
-    m4 -DGO_CMD=${__GO_CMD} ${__GO_DIR}/macros.m4 $1 ${__GO_DIR}/end.m4
+    m4 -DGO_CMD=${__GO_CMD} ${__GO_DIR}/macros.m4 $1
