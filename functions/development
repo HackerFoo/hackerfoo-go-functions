@@ -1,24 +1,25 @@
 # -*- mode: sh -*-
 
-GO(poprc-push-startle) {
+DECLARE
+  POPRC_ROOT=~/src/poprc
+
+GO(poprc-push-startle)
   BLOCK({{
     cd ~/src/startle
     git config receive.denyCurrentBranch warn
-    cd ~/src/poprc
+    cd ${POPRC_ROOT}
     git subtree push --prefix=startle ~/src/startle master
   }})
-}
 
-POPRC_HOME=~/src/poprc
 GO(popr) (
-    cd ${POPRC_HOME}
+    cd ${POPRC_ROOT}
     if [ ! -f eval ]; then
         make eval
     fi
     ./eval -lo *.ppr -im $@
 )
 
-GO(quick-git) {
+GO(quick-git)
     if git rev-parse --git-dir &> /dev/null
     then
         git status
@@ -28,11 +29,9 @@ GO(quick-git) {
         git add $@
         git commit -m "initial commit"
     fi
-}
 
-GO(emacs) {
+GO(emacs)
     emacsclient -c -a '' $@
-}
 
 # src dst NAME=VAL ...
 GO(scaffold) (
@@ -62,6 +61,5 @@ GO(scaffold) (
     fi
 )
 
-GO(web-server) {
+GO(web-server)
     python -m SimpleHTTPServer
-}

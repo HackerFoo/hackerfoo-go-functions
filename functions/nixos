@@ -1,45 +1,39 @@
 # -*- mode: sh -*-
 
-GO(switch) {
+GO(switch)
     BLOCK({{
       sudo nixos-rebuild switch $@
     }})
-}
 
-GO(upgrade) {
+GO(upgrade)
     BLOCK({{
       sudo nixos-rebuild switch --upgrade
       nix-env --upgrade
       sudo nix-collect-garbage --delete-older-than 30d
     }})
-}
 
-GO(shell) {
+GO(shell)
     if [ "$1" ]; then
         nix-shell '<nixpkgs>' -A $1
     else
         echo "Package name required."
     fi
-}
 
-GO(build) {
+GO(build)
     if [ "$1" ]; then
         nix-shell '<nixpkgs>' -A $1 --command 'configurePhase && buildPhase; return;'
     else
         echo "Package name required."
     fi
-}
 
-GO(upgrade-channel) {
+GO(upgrade-channel)
     sudo nix-channel --add https://nixos.org/channels/nixos-$1 nixos
-}
 
-GO(install-with-channel) {
+GO(install-with-channel)
     nix-env --arg pkgs "import (builtins.fetchTarball channel:$1) ({ config.allowUnfree = true; })" -f . -iA $2
-}
 
 # https://nixos.wiki/wiki/Cheatsheet#Adding_files_to_the_store
-GO(store-large-file) {
+GO(store-large-file)
     BLOCK({{
       LARGE_FILE="`realpath $1`"
       (sudo unshare -m bash) <<EOF
@@ -51,4 +45,3 @@ cp $LARGE_FILE \$STOREPATH
 printf "\$STOREPATH\n\n0\n" | nix-store --register-validity --reregister
 EOF
     }})
-}

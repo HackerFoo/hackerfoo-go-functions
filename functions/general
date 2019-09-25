@@ -1,16 +1,17 @@
 # -*- mode: sh -*-
 
-GO(show-log) {
-  sudo journalctl -xeu $1
-}
+NOTIFY_MIN_TIME=30
+NOTIFY_PIPE=~/notify
 
-GO(string_to_files) {
+GO(show-log)
+  sudo journalctl -xeu $1
+
+GO(string_to_files)
     for w in $1; do
         if [ -f "$w" ]; then
             printf "$w "
         fi
     done
-}
 
 GO(prompt) (
     read -p "$1 (y/N) " RESPONSE
@@ -22,13 +23,10 @@ GO(prompt) (
     fi
 )
 
-NOTIFY_MIN_TIME=30
-GO(notify_start) {
+GO(notify_start)
     NOTIFY_START_TIME=`date +%s`
-}
 
-NOTIFY_PIPE=~/notify
-GO(notify) {
+GO(notify)
     if [ -n "${NOTIFY_START_TIME}" ]; then
         (
             NOW=`date +%s`
@@ -40,16 +38,13 @@ GO(notify) {
         )
         unset NOTIFY_START_TIME
     fi
-}
 
-GO(in-tmux) {
+GO(in-tmux)
     if tmux has-session -t "$1"; then
         tmux attach -t "$1"
     else
         tmux new-session -s "$1" "source ~/.go.sh/load; go $@"
     fi
-}
 
-GO(check-m4) {
-    m4 -DGO_CMD=${__GO_CMD} ${__GO_DIR}/macros.m4 $1
-}
+GO(check-m4)
+    m4 -DGO_CMD=${__GO_CMD} ${__GO_DIR}/macros.m4 $1 ${__GO_DIR}/end.m4

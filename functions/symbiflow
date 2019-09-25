@@ -1,8 +1,12 @@
 # -*- mode: sh -*-
 
-SF_ROOT=${SF_ROOT:-${HOME}/src/symbiflow-arch-defs}
+DECLARE
+  SF_ROOT=${SF_ROOT:-${HOME}/src/symbiflow-arch-defs}
+  XRAY_DIR=$HOME/src/prjxray
+  CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db
+  #CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/channels.db
 
-GO(sf) {
+GO(sf)
     cd ${SF_ROOT}
     if [ "$FHS_USER_ENV" != "true" ]
     then
@@ -10,9 +14,8 @@ GO(sf) {
         nix-instantiate ~/nix/sf-shell.nix --add-root ~/.gcroots/sf-shell --indirect &> /dev/null
         nix-shell ~/nix/sf-shell.nix
     fi
-}
 
-GO(bit2vivado) {
+GO(bit2vivado)
     source ~/src/prjxray/database/artix7/settings.sh
     source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
     BLOCK({{
@@ -42,9 +45,8 @@ save_project_as -force design.xpr}})
       ${XRAY_BITREAD} -F $XRAY_ROI_FRAMES -o design.bits -z -y design.bit
       ${XRAY_BIT2FASM} --verbose design.bit > design.fasm
     }})
-}
 
-GO(open_in_vivado) {
+GO(open_in_vivado)
     source ~/src/prjxray/database/artix7/settings.sh
     source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
     BLOCK({{
@@ -152,12 +154,9 @@ write_bitstream -force design.bit
 save_project_as -force design.xpr}})
       ${XRAY_VIVADO} ${BATCH} -source runme.tcl
     }})
-}
 
-XRAY_DIR=$HOME/src/prjxray
-GO(write_bit) {
+GO(write_bit)
     openocd -f $XRAY_DIR/utils/openocd/board-digilent-basys3.cfg -c "init; pld load 0 $1; exit" || return
-}
 
 GO(sf_build) (
     if [ ! -d ${SF_ROOT} ]; then
@@ -229,26 +228,23 @@ GO(retry_error_command) (
     fi
 )
 
-GO(error_message) {
+GO(error_message)
     grep -m 1 -iE '(error\>)|(cannot route)' ${SF_ROOT}/build/build.log
-}
 
 define({{build_target}}, {{
     if [ -n "$2" ]; then
         GO_CALL(sf_build) $1_$2 || return
     fi}})
 
-GO(shifter) {
+GO(shifter)
     build_target(dram_shifter_$1, $2)
     cd ${SF_ROOT}/build/xc7/tests/dram_shifter/dram_shifter_${1}/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
-}
 
-GO(bshifter) {
+GO(bshifter)
     build_target(bram_shifter_$1, $2)
     cd ${SF_ROOT}/build/xc7/tests/bram_shifter/bram_shifter_${1}/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
-}
 
-GO(dram_test) {
+GO(dram_test)
     if [ "$2" == "run" ]
     then
         if [ "$3" != "now" ]
@@ -261,9 +257,8 @@ GO(dram_test) {
         build_target(dram_test_$1, $2)
         cd ${SF_ROOT}/build/xc7/tests/dram_test/dram_test_${1}/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
     fi
-}
 
-GO(bram_test) {
+GO(bram_test)
     __BRAM_TEST=bram
     if [[ $1 == *"init"* || $1 == *"sdp"* ]]; then
         __BRAM_TEST=${__BRAM_TEST}_$1
@@ -283,43 +278,36 @@ GO(bram_test) {
         build_target(${__BRAM_TEST}_$1, $2)
         cd ${SF_ROOT}/build/xc7/tests/${__BRAM_TEST}/${__BRAM_TEST}_$1/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
     fi
-}
 
-GO(dram) {
+GO(dram)
     build_target(dram_$1, $2)
     cd ${SF_ROOT}/build/xc7/tests/dram/dram_${1}/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
-}
 
-GO(set_sf) {
+GO(set_sf)
     export SF_ROOT=$PWD
-}
 
-GO(scalable_proc) {
+GO(scalable_proc)
     BLOCK({{
       GO_CALL(sf_build) top_$1_prog
       ${SF_ROOT}/tests/9-scalable_proc/utils/receiver.py --baud 500000
     }})
-}
 
-GO(serial_hex) {
+GO(serial_hex)
     BLOCK({{
       stty raw 500000 < /dev/ttyUSB1
       xxd /dev/ttyUSB1
     }})
-}
 
-GO(serial_ascii) {
+GO(serial_ascii)
     screen /dev/ttyUSB1 115200
-}
 
-GO(sf_env) {
+GO(sf_env)
     BLOCK({{
       cd ${SF_ROOT}
       make env
     }})
-}
 
-GO(to_test) {
+GO(to_test)
     WITH_SHOPT(nullglob, {{
       __dirs=( ${SF_ROOT}/build/*/tests/*/$1/*/ ${SF_ROOT}/build/tests/*/*/$1/*/ )
     }})
@@ -337,17 +325,14 @@ GO(to_test) {
     fi
     unset __dirs
     unset __matches
-}
 
-GO(clear_cmake_cache) {
+GO(clear_cmake_cache)
     rm -f ${SF_ROOT}/build/CMakeCache.txt
-}
 
-GO(bit2fasm) {
+GO(bit2fasm)
     source ~/src/prjxray/database/artix7/settings.sh
     source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
     $XRAY_BIT2FASM --verbose --canonical $1.bit > $1.fasm
-}
 
 GO(diffasm) (
     FILTER1="s/_(X[0-9]+)?Y[0-9]+//g" # strip all _XnYn and _Yn
@@ -359,7 +344,7 @@ GO(diffasm) (
               <(grep $1 $3 | eval ${FILTER_CMD}) | less -r
 )
 
-GO(fasm2bit) {
+GO(fasm2bit)
     source ~/src/prjxray/database/artix7/settings.sh
     source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
     BLOCK({{
@@ -383,23 +368,17 @@ GO(fasm2bit) {
                                    --part_file $XRAY_DATABASE_DIR/artix7/xc7a35tcpg236-1.yaml
       fi
     }})
-}
 
-GO(find-makefile) {
+GO(find-makefile)
     grep -B 1 "cmake_echo_color.*\".*$1.*\"" ${SF_ROOT}/build/CMakeFiles/Makefile2 | head -n 1 | cut -d' ' -f 3
     grep -lr "cmake_echo_color.*\".*$1.*\"" ${SF_ROOT}/build --include build.make
-}
 
-CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db
-#CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/channels.db
-
-GO(select-channels-db) {
+GO(select-channels-db)
     echo "Which channels.db?"
     select db in `find ${SF_ROOT}/build/ -name channels.db`; do
         CHANNELS_DB=${db}
         break
     done
-}
 
 
 define({{QUERY}}, {{
@@ -598,6 +577,18 @@ GO(list-tiles-at) (
   }})
 )
 
+GO(intratile-pips)
+  QUERY(TILE_TYPE_A, {{ SELECT pkey FROM tile_type WHERE name = "$1"; }})
+  QUERY(TILE_TYPE_B, {{ SELECT pkey FROM tile_type WHERE name = "$2"; }})
+  QUERY(PIPS, {{
+  SELECT DISTINCT pip_in_tile.name FROM pip_in_tile
+    JOIN wire_in_tile src ON (pip_in_tile.src_wire_in_tile_pkey = src.pkey)
+    JOIN wire_in_tile dest ON (pip_in_tile.dest_wire_in_tile_pkey = dest.pkey)
+    WHERE src.tile_type_pkey IN (${TILE_TYPE_A}, ${TILE_TYPE_B}) AND
+          dest.tile_type_pkey IN (${TILE_TYPE_A}, ${TILE_TYPE_B}) AND
+          src.tile_type_pkey != dest.tile_type_pkey;
+  }})
+
 undefine({{QUERY}})dnl
 
 GO(find-rr-node) (
@@ -612,12 +603,10 @@ GO(find-rr-node) (
     lz4cat ${RR_GRAPH_PREPROCESSED} | rg ${NODE_ID}
 )
 
-GO(lookup-rr-node-in-db) {
+GO(lookup-rr-node-in-db)
     python3 ${SF_ROOT}/xc7/utils/prjxray_lookup_inode.py \
             --rrgraph_node_map ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3-x1y0_test.rr_graph.real.xml.node_map.pickle \
             --connection_database ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db --inode $1
-}
 
-GO(open_channels_db) {
+GO(open_channels_db)
     sqlite3 ${CHANNELS_DB}
-}

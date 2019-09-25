@@ -1,6 +1,6 @@
 # -*- mode: sh -*-
 
-GO(connect-headphones) {
+GO(connect-headphones)
   BLOCK({{
     DEVICE_NAME="Cone of Silence"
     PS=( `ps -u gdm | grep -m 1 pulseaudio` )
@@ -9,15 +9,13 @@ GO(connect-headphones) {
     sleep 2
     echo "connect ${DEVICE[1]}" | bluetoothctl
   }})
-}
 
-GO(connect-trackpad) {
+GO(connect-trackpad)
   BLOCK({{
     DEVICE_NAME="Trackpad"
     DEVICE=( `echo paired-devices | bluetoothctl | grep "^Device .*$DEVICE_NAME"` )
     echo "connect ${DEVICE[1]}" | bluetoothctl
   }})
-}
 
 GO(monitor) (
     while true; do
@@ -28,15 +26,14 @@ GO(monitor) (
     done
 )
 
-GO(trim) {
+GO(trim)
     if [ "$1" ]; then
         export PROMPT_DIRTRIM=$1
     else
         export PROMPT_DIRTRIM=3
     fi
-}
 
-GO(ssh-rev) {
+GO(ssh-rev)
     BLOCK({{
       echo "turning off wireless power saving..."
       sudo iw dev wlp6s0 set power_save off
@@ -46,18 +43,15 @@ GO(ssh-rev) {
               -o ExitOnForwardFailure=yes -o ServerAliveInterval=60 -o ServerAliveCountMax=2 \
               -R 2222:localhost:22 dev.hackerfoo.com -N
     }})
-}
 
-GO(tmux-remote) {
+GO(tmux-remote)
     ssh -C -c aes128-ctr -o IPQoS=af21 dev.hackerfoo.com -t ssh -c aes128-ctr -p 2222 localhost -t tmux $@
-}
 
 GO(mm) (
     read -p "password: " -s PASS
     mm -d ~/mm -s https://sandbox.hackerfoo.com:8448 -u notification_bot -p $PASS
 )
 
-GO(scroll) {
+GO(scroll)
     xinput --set-prop "Logitech USB Trackball" "libinput Scroll Method Enabled" 0 0 1
     xinput --set-prop "Logitech USB Trackball" "libinput Button Scrolling Button" 8
-}

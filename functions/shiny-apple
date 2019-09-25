@@ -1,47 +1,41 @@
 # -*- mode: sh -*-
 
-GO(rsync_gx1) {
+DECLARE
+  POPRC_ROOT=${HOME}/src/poprc
+  HACKERFOO_DIR=${HOME}/src/hackerfoo
+
+GO(rsync_gx1)
     if [ "$1" ]; then
         rsync -rv --ignore-existing /Volumes/GX1/DCIM/$1_PANA/ /Volumes/White/Pictures/GX1/$1_PANA/
     else
         echo "missing argument"
         (cd /Volumes/GX1/DCIM/; ls)
     fi
-}
 
-POPR_DIR=${HOME}/src/poprc
-
-GO(check_popr) {
+GO(check_popr)
     BLOCK({{
-      cd ${POPR_DIR}
+      cd ${POPRC_ROOT}
       make clean
       make BUILD=release
       make CC=gcc-9 BUILD=release
     }})
-}
 
-HACKERFOO_DIR=${HOME}/src/hackerfoo
-
-GO(update_popr_eval) {
+GO(update_popr_eval)
     BLOCK({{
-      cd ${POPR_DIR}
+      cd ${POPRC_ROOT}
       make clean
       make js/eval.js BUILD=release-with-asserts
       cd ${HACKERFOO_DIR}/app_engine
-      cp ${POPR_DIR}/js/eval.{js,wasm} public/js
+      cp ${POPRC_ROOT}/js/eval.{js,wasm} public/js
       open public/eval.html
       gcloud app deploy
     }})
-}
 
-GO(ssh-hank) {
+GO(ssh-hank)
     ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2222
-}
 
-GO(tmux-hank) {
+GO(tmux-hank)
     ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
-}
 
-GO(unload-ftdi) {
+GO(unload-ftdi)
     sudo kextunload -p -b com.FTDI.driver.FTDIUSBSerialDriver
-}
