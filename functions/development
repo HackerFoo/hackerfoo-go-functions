@@ -63,3 +63,9 @@ GO(scaffold) (
 
 GO(web-server)
     python -m SimpleHTTPServer
+
+GOPY(pytest)
+  import os
+  print("Hi {}!".format(os.getlogin()))
+  for i in range(5):
+    print("i = {}".format(i))
