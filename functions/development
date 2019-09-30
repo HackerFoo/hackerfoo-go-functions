@@ -41,14 +41,16 @@ GO(scaffold) (
     shift 2
     echo "# scaffold: ${SRC} -> ${DST}, $@" > run-scaffold.sh
     DEFINES=""
+    SED=""
     for d in $@; do
         DEFINES="${DEFINES} -D$d"
+        SED="${SED} -e s=$d=g"
     done
     pushd ${SRC} > /dev/null
     FILES=( **/*.template )
     popd > /dev/null
     for f in "${FILES[@]}"; do
-        OUT=`echo "$f" | sed 's/\.template$//' | m4 ${DEFINES} -`
+        OUT=`echo "$f" | sed 's/\.template$//' | sed ${SED}`
         echo "mkdir -p $(dirname ${DST}/${OUT})" >> run-scaffold.sh
         echo "m4 ${DEFINES} ${SRC}/$f > ${DST}/${OUT}" >> run-scaffold.sh
     done
