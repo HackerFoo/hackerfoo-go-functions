@@ -45,3 +45,14 @@ cp $LARGE_FILE \$STOREPATH
 printf "\$STOREPATH\n\n0\n" | nix-store --register-validity --reregister
 EOF
     }})
+
+GO(dev-kmod)
+    case "$1" in
+        "start")
+            nix-shell '<nixpkgs>' -A linux.dev
+            ;;
+
+        "build")
+            make -C $(nix-build -E '(import <nixpkgs> {}).linux.dev' --no-out-link)/lib/modules/*/build M=$(pwd) modules
+            ;;
+    esac
