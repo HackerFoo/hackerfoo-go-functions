@@ -329,6 +329,12 @@ GO(to_test)
 GO(clear_cmake_cache)
     rm -f ${SF_ROOT}/build/CMakeCache.txt
 
+GO(fix-conda)
+    BLOCK({{
+      rm -Ir ${SF_ROOT}/build/env
+      make -C ${SF_ROOT}/build all_conda
+    }})
+
 GO(bit2fasm)
     source ~/src/prjxray/database/artix7/settings.sh
     source ~/src/prjxray/minitests/roi_harness/basys3-swbut.sh
@@ -587,6 +593,20 @@ GO(intratile-pips)
     WHERE src.tile_type_pkey IN (${TILE_TYPE_A}, ${TILE_TYPE_B}) AND
           dest.tile_type_pkey IN (${TILE_TYPE_A}, ${TILE_TYPE_B}) AND
           src.tile_type_pkey != dest.tile_type_pkey;
+  }})
+
+GO(pad-to-vpr-coord)
+  PACKAGE_PINS=${SF_ROOT}/third_party/prjxray-db/artix7/xc7a35tcpg236-1_package_pins.csv
+  TILE="`rg "^$1,.*" ${PACKAGE_PINS} | cut -d',' -f 3`"
+  if [ -z "$TILE" ]; then
+      echo "Pad not found"
+      return
+  fi
+  echo "$1 is in ${TILE}"
+  SUFFIX="`echo ${TILE} | cut -d'_' -f 2`"
+  QUERY(COORDS, {{
+  SELECT grid_x, grid_y FROM tile
+    WHERE phy_tile_pkey = (SELECT pkey FROM phy_tile WHERE name like "%IOI%_${SUFFIX}")
   }})
 
 undefine({{QUERY}})dnl
