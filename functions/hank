@@ -55,3 +55,6 @@ GO(mm) (
 GO(scroll)
     xinput --set-prop "Logitech USB Trackball" "libinput Scroll Method Enabled" 0 0 1
     xinput --set-prop "Logitech USB Trackball" "libinput Button Scrolling Button" 8
+
+GO(wake-hank)
+    ssh root@openwrt -C "/usr/bin/etherwake -D -i 'br-lan' "D4:5D:DF:13:74:E6" 2>&1"
