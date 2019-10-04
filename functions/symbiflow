@@ -609,6 +609,14 @@ GO(pad-to-vpr-coord)
     WHERE phy_tile_pkey = (SELECT pkey FROM phy_tile WHERE name like "%IOI%_${SUFFIX}")
   }})
 
+GO(phy-tile-type-at)
+  QUERY(PHY_TILE_TYPE, {{
+  SELECT tile_type.name FROM tile
+    JOIN phy_tile ON (tile.phy_tile_pkey = phy_tile.pkey)
+    JOIN tile_type ON (phy_tile.tile_type_pkey = tile_type.pkey)
+    WHERE tile.grid_x = $1 AND tile.grid_y = $2;
+  }})
+
 undefine({{QUERY}})dnl
 
 GO(find-rr-node) (
