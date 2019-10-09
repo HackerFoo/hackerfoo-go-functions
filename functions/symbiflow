@@ -638,3 +638,38 @@ GO(lookup-rr-node-in-db)
 
 GO(open_channels_db)
     sqlite3 ${CHANNELS_DB}
+
+GO(lookahead) (
+
+    cd ${SF_ROOT}/build/xc7/archs/artix7/devices
+
+    case "$1" in
+        conda)
+            VPR=${SF_ROOT}/build/env/conda/bin/vpr
+            ;;
+        src)
+            VPR=${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr
+            ;;
+        *)
+            echo "which VPR?"
+            return
+    esac
+
+    ${VPR} ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-roi-virt/arch.timing.xml \
+           --device xc7a50t-basys3-test ${SF_ROOT}/common/wire.eblif \
+           --read_rr_graph ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml \
+           --outfile_prefix xc7a50t-basys3_test_cache \
+           --pack \
+           --place \
+           --write_router_lookahead rr_graph_xc7a50t-basys3_test.lookahead.bin \
+           --write_placement_delay_lookup rr_graph_xc7a50t-basys3_test.place_delay.bin \
+           --constant_net_method route \
+           --clock_modeling route \
+           --place_delay_model delta_override \
+           --router_lookahead connection_box_map \
+           --disable_errors check_unbuffered_edges:check_route:check_place \
+           --suppress_warnings sum_pin_class:check_unbuffered_edges:load_rr_indexed_data_T_values:check_rr_node:trans_per_R \
+           --route_chan_width 500 \
+           --astar_fac 0.75 \
+           --bb_factor 100
+)
