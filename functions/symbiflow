@@ -3,7 +3,7 @@
 DECLARE
   SF_ROOT=${SF_ROOT:-${HOME}/src/symbiflow-arch-defs}
   XRAY_DIR=$HOME/src/prjxray
-  CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db
+  CHANNELS_DB=${CHANNELS_DB:-${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db}
   #CHANNELS_DB=${SF_ROOT}/build/xc7/archs/artix7/channels.db
 
 GO(sf)
@@ -158,6 +158,12 @@ save_project_as -force design.xpr}})
 GO(write_bit)
     openocd -f $XRAY_DIR/utils/openocd/board-digilent-basys3.cfg -c "init; pld load 0 $1; exit" || return
 
+define({{WITH_LOG}}, {{(
+  export RUNME="$2"
+  script --quiet --output-limit 32M --command '${RUNME}' "$1"
+)
+}})dnl
+
 GO(sf_build) (
     if [ ! -d ${SF_ROOT} ]; then
         echo "SF_ROOT not set correctly"
@@ -166,14 +172,10 @@ GO(sf_build) (
         make -C ${SF_ROOT} env
     fi
     GO_CALL(notify_start)
-    RUNME=$(mktemp --tmpdir runme.sh.XXXXXXXXXX)
-    FILE_VAR(${RUNME}, {{
-#!/usr/bin/env bash
-make -j`nproc` --output-sync=target -C ${SF_ROOT}/build $@
-}})
-    chmod +x ${RUNME}
-    script --quiet --output-limit 32M --command ${RUNME} ${SF_ROOT}/build/build.log
-    rm -f ${RUNME}
+
+    WITH_LOG(${SF_ROOT}/build/build.log, {{
+      make -j`nproc` -C ${SF_ROOT}/build $@
+    }})
 
     ERR="`GO_CALL(error_message)`"
     RET=$?
@@ -619,28 +621,41 @@ GO(phy-tile-type-at)
 
 undefine({{QUERY}})dnl
 
-GO(find-rr-node) (
+GO(grep-graph) (
     NODE_ID=$1
-    RR_GRAPH=${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3-x1y0_test.rr_graph.real.xml
+    RR_GRAPH=${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml
     RR_GRAPH_PREPROCESSED=${RR_GRAPH}.pp.lz4
     if [ ! -f ${RR_GRAPH_PREPROCESSED} -o ${RR_GRAPH} -nt ${RR_GRAPH_PREPROCESSED} ]; then
         echo "preprocessing ${RR_GRAPH} ..."
-        time xmllint --xpath "rr_graph/rr_nodes/node | rr_graph/rr_edges/edge" --format ${RR_GRAPH} | lz4 > ${RR_GRAPH_PREPROCESSED}
+        time xmllint --format ${RR_GRAPH} | lz4 > ${RR_GRAPH_PREPROCESSED}
         echo "done."
     fi
-    lz4cat ${RR_GRAPH_PREPROCESSED} | rg ${NODE_ID}
+    lz4cat ${RR_GRAPH_PREPROCESSED} | rg "${NODE_ID}"
+)
+
+GO(less-graph) (
+    NODE_ID=$1
+    RR_GRAPH=${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml
+    RR_GRAPH_PREPROCESSED=${RR_GRAPH}.pp.lz4
+    if [ ! -f ${RR_GRAPH_PREPROCESSED} -o ${RR_GRAPH} -nt ${RR_GRAPH_PREPROCESSED} ]; then
+        echo "preprocessing ${RR_GRAPH} ..."
+        time xmllint --format ${RR_GRAPH} | lz4 > ${RR_GRAPH_PREPROCESSED}
+        echo "done."
+    fi
+    lz4cat ${RR_GRAPH_PREPROCESSED} | less
 )
 
 GO(lookup-rr-node-in-db)
     python3 ${SF_ROOT}/xc7/utils/prjxray_lookup_inode.py \
-            --rrgraph_node_map ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3-x1y0_test.rr_graph.real.xml.node_map.pickle \
-            --connection_database ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-x1y0-roi-virt/channels.db --inode $1
+            --rrgraph_node_map ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml.node_map.pickle \
+            --connection_database ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-roi-virt/channels.db --inode $1
 
 GO(open_channels_db)
     sqlite3 ${CHANNELS_DB}
 
 GO(lookahead) (
 
+    export VPR_NUM_WORKERS=`nproc`
     cd ${SF_ROOT}/build/xc7/archs/artix7/devices
 
     case "$1" in
@@ -650,26 +665,39 @@ GO(lookahead) (
         src)
             VPR=${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr
             ;;
+        lldb)
+            VPR="lldb -- ${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr"
+            ;;
+        log)
+            less ${SF_ROOT}/build/lookahead.log
+            return
+            ;;
         *)
             echo "which VPR?"
             return
+            ;;
     esac
 
-    ${VPR} ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-roi-virt/arch.timing.xml \
-           --device xc7a50t-basys3-test ${SF_ROOT}/common/wire.eblif \
-           --read_rr_graph ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml \
-           --outfile_prefix xc7a50t-basys3_test_cache \
-           --pack \
-           --place \
-           --write_router_lookahead rr_graph_xc7a50t-basys3_test.lookahead.bin \
-           --write_placement_delay_lookup rr_graph_xc7a50t-basys3_test.place_delay.bin \
-           --constant_net_method route \
-           --clock_modeling route \
-           --place_delay_model delta_override \
-           --router_lookahead connection_box_map \
-           --disable_errors check_unbuffered_edges:check_route:check_place \
-           --suppress_warnings sum_pin_class:check_unbuffered_edges:load_rr_indexed_data_T_values:check_rr_node:trans_per_R \
-           --route_chan_width 500 \
-           --astar_fac 0.75 \
-           --bb_factor 100
+    WITH_LOG(${SF_ROOT}/build/lookahead.log, {{
+      ${VPR} ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-roi-virt/arch.timing.xml \
+               --device xc7a50t-basys3-test ${SF_ROOT}/common/wire.eblif \
+               --read_rr_graph ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml \
+               --outfile_prefix xc7a50t-basys3_test_cache \
+               --pack \
+               --place \
+               --write_router_lookahead rr_graph_xc7a50t-basys3_test.lookahead.bin \
+               --write_placement_delay_lookup rr_graph_xc7a50t-basys3_test.place_delay.bin \
+               --constant_net_method route \
+               --clock_modeling route \
+               --place_delay_model delta_override \
+               --router_lookahead connection_box_map \
+               --disable_errors check_unbuffered_edges:check_route:check_place \
+               --suppress_warnings sum_pin_class:check_unbuffered_edges:load_rr_indexed_data_T_values:check_rr_node:trans_per_R \
+               --route_chan_width 500 \
+               --astar_fac 0.75 \
+               --bb_factor 100
+    }})
 )
+
+GO(install-sdf-timing)
+    pip install -e ${SF_ROOT}/third_party/python-sdf-timing --prefix ${TMPDIR}
