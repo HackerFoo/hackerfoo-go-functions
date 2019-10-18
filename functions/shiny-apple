@@ -41,5 +41,8 @@ GO(ssh-hank)
 GO(tmux-hank)
     ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
 
+GO(tmux-hank-home)
+    ssh -Y -C -c aes128-ctr -o IPQoS=af21 hank -t tmux -CC $@
+
 GO(unload-ftdi)
     sudo kextunload -p -b com.FTDI.driver.FTDIUSBSerialDriver
