@@ -696,7 +696,7 @@ GO(lookahead) (
             DEVICE=xc7a50t-basys3
             DEVICE_ROI=${DEVICE}-roi
             ;;
-        big)
+        big | large)
             DEVICE=xc7a50t
             DEVICE_ROI=${DEVICE}
             ;;
@@ -723,7 +723,8 @@ GO(lookahead) (
                --suppress_warnings sum_pin_class:check_unbuffered_edges:load_rr_indexed_data_T_values:check_rr_node:trans_per_R \
                --route_chan_width 500 \
                --astar_fac 0.75 \
-               --bb_factor 100
+               --bb_factor 100 \
+               --lookahead_search_locations 25,23;23,25;1,1;76,1;25,25;25,27;75,26
     }})
 )
 
@@ -743,3 +744,53 @@ GO(mergable-wip)
         fi
     done
 
+GO(route-murax) (
+    case "$1" in
+        small)
+            DEVICE=xc7a50t-basys3-roi-virt
+            TESTDIR=tests/9-soc/murax/murax_basys/artix7-xc7a50t-basys3-roi-virt-xc7a50t-basys3-test
+            GRAPH=xc7a50t-basys3
+            ;;
+        big | large)
+            DEVICE=xc7a50t-virt
+            TESTDIR=tests/9-soc/murax/murax_basys_x1y0/artix7-xc7a50t-roi-virt-xc7a50t-test
+            GRAPH=xc7a50t
+            ;;
+        *)
+            echo "what size?"
+            return
+            ;;
+    esac
+
+   cd ${SF_ROOT}/build/${TESTDIR}
+
+   ${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr \
+          ${SF_ROOT}/build/xc7/archs/artix7/devices/${DEVICE}/arch.timing.xml \
+          ${SF_ROOT}/build/${TESTDIR}/toplevel.eblif \
+          --device ${GRAPH}-test \
+          --read_rr_graph ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_${GRAPH}_test.rr_graph.real.xml \
+          --min_route_chan_width_hint 100 \
+          --max_router_iterations 500 \
+          --routing_failure_predictor off \
+          --router_high_fanout_threshold -1 \
+          --constant_net_method route \
+          --route_chan_width 500 \
+          --max_criticality 0.9 \
+          --clock_modeling route \
+          --place_delay_model delta_override \
+          --router_lookahead connection_box_map \
+          --clustering_pin_feasibility_filter off \
+          --disable_check_route on \
+          --strict_checks off \
+          --allow_dangling_combinational_nodes on \
+          --disable_errors check_unbuffered_edges:check_route \
+          --congested_routing_iteration_threshold 0.8 \
+          --timing_tradeoff 0.6 \
+          --astar_fac 1.0 \
+          --bb_factor 10 \
+          --suppress_warnings ${SF_ROOT}/build/${TESTDIR}/noisy_warnings.log,sum_pin_class:check_unbuffered_edges:load_rr_indexed_data_T_values:check_rr_node:trans_per_R \
+          --sdc_file ${SF_ROOT}/build/tests/9-soc/murax/basys3.sdc \
+          --read_router_lookahead ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_${GRAPH}_test.lookahead.bin \
+          --read_placement_delay_lookup ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_${GRAPH}_test.place_delay.bin \
+          --route
+)
