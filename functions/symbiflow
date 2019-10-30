@@ -301,7 +301,7 @@ GO(serial_hex)
     }})
 
 GO(serial_ascii)
-    screen /dev/ttyUSB1 115200
+    screen /dev/ttyUSB2 115200
 
 GO(sf_env)
     BLOCK({{
@@ -656,6 +656,8 @@ GO(open_channels_db)
 GO(lookahead) (
 
     export VPR_NUM_WORKERS=`nproc`
+    export CPUPROFILE=/tmp/vpr.prof
+
     cd ${SF_ROOT}/build/xc7/archs/artix7/devices
 
     case "$1" in
@@ -668,8 +670,19 @@ GO(lookahead) (
         lldb)
             VPR="lldb -- ${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr"
             ;;
+        gdb)
+            VPR="gdb --args ${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr"
+            ;;
+        prof)
+            pprof ${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr ${CPUPROFILE}
+            return
+            ;;
         log)
-            less ${SF_ROOT}/build/lookahead.log
+            less -r ${SF_ROOT}/build/lookahead.log
+            return
+            ;;
+        freq)
+            sort ${SF_ROOT}/build/lookahead.log | uniq -c | sort -nr | head -n ${2:-10}
             return
             ;;
         *)
@@ -678,15 +691,30 @@ GO(lookahead) (
             ;;
     esac
 
+    case "$2" in
+        small)
+            DEVICE=xc7a50t-basys3
+            DEVICE_ROI=${DEVICE}-roi
+            ;;
+        big)
+            DEVICE=xc7a50t
+            DEVICE_ROI=${DEVICE}
+            ;;
+        *)
+            echo "what size?"
+            return
+            ;;
+    esac
+
     WITH_LOG(${SF_ROOT}/build/lookahead.log, {{
-      ${VPR} ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-roi-virt/arch.timing.xml \
-               --device xc7a50t-basys3-test ${SF_ROOT}/common/wire.eblif \
-               --read_rr_graph ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml \
-               --outfile_prefix xc7a50t-basys3_test_cache \
+      ${VPR} ${SF_ROOT}/build/xc7/archs/artix7/devices/${DEVICE_ROI}-virt/arch.timing.xml \
+               --device ${DEVICE}-test ${SF_ROOT}/common/wire.eblif \
+               --read_rr_graph ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_${DEVICE}_test.rr_graph.real.xml \
+               --outfile_prefix ${DEVICE}_test_cache \
                --pack \
                --place \
-               --write_router_lookahead rr_graph_xc7a50t-basys3_test.lookahead.bin \
-               --write_placement_delay_lookup rr_graph_xc7a50t-basys3_test.place_delay.bin \
+               --write_router_lookahead rr_graph_${DEVICE}_test.lookahead.bin \
+               --write_placement_delay_lookup rr_graph_${DEVICE}_test.place_delay.bin \
                --constant_net_method route \
                --clock_modeling route \
                --place_delay_model delta_override \
@@ -701,3 +729,17 @@ GO(lookahead) (
 
 GO(install-sdf-timing)
     pip install -e ${SF_ROOT}/third_party/python-sdf-timing --prefix ${TMPDIR}
+
+GO(mergable-wip)
+    OK_BRANCHES=""
+    CONFLICTING_BRANCHES=""
+    for b in `git branch -r --list 'origin/wip/*'`
+    do
+        if GO_CALL(ok2merge) "$b"
+        then
+            OK_BRANCHES="${OK_BRANCHES} $b"
+        else
+            CONFLICTING_BRANCHES="${CONFLICTING_BRANCHES} $b"
+        fi
+    done
+

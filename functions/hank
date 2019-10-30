@@ -58,3 +58,6 @@ GO(scroll)
 
 GO(wake-hank)
     ssh root@openwrt -C "/usr/bin/etherwake -D -i 'br-lan' "D4:5D:DF:13:74:E6" 2>&1"
+
+GO(fast-wifi)
+    sudo iw dev wlp6s0 set power_save off

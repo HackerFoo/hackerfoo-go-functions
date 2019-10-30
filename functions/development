@@ -71,3 +71,16 @@ GOPY(pytest)
   print("Hi {}!".format(os.getlogin()))
   for i, arg in enumerate(argv):
     print("arg {} was: {}".format(i, arg))
+
+GO(ok2merge) (
+    set -e
+    BRANCH="$1"
+    PATCH=`mktemp ${BRANCH//\//_}-XXX.patch`
+    (
+        git format-patch ..${BRANCH} --stdout > ${PATCH}
+        git apply ${PATCH} --check
+    ) &> /dev/null
+    RET=$?
+    rm ${PATCH}
+    return ${RET}
+)
