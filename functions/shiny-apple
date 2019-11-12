@@ -22,6 +22,8 @@ GO(check_popr)
 
 GO(update_popr_eval)
     BLOCK({{
+      source ~/src/emsdk/emsdk_env.sh
+      emsdk activate latest
       cd ${POPRC_ROOT}
       make clean
       make js/eval.js BUILD=release-with-asserts
@@ -39,7 +41,10 @@ GO(ssh-hank)
     ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2222
 
 GO(tmux-hank)
-    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
+    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -o ServerAliveInterval=10 -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
+
+GO(tmux-hank-wifi)
+    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2223 -t tmux -CC $@
 
 GO(tmux-hank-home)
     ssh -Y -C -c aes128-ctr -o IPQoS=af21 hank -t tmux -CC $@
