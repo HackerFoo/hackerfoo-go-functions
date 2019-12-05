@@ -165,6 +165,7 @@ define({{WITH_LOG}}, {{(
 }})dnl
 
 GO(sf_build) (
+    export VPR_NUM_WORKERS=${VPR_NUM_WORKERS:-`nproc`}
     if [ ! -d ${SF_ROOT} ]; then
         echo "SF_ROOT not set correctly"
         return
@@ -645,7 +646,8 @@ GO(less-graph) (
     lz4cat ${RR_GRAPH_PREPROCESSED} | less
 )
 
-GO(lookup-rr-node-in-db)
+GO(lookup-rr-node-in-db) (
+    PYTHONPATH=${SF_ROOT}/utils
     python3 ${SF_ROOT}/xc7/utils/prjxray_lookup_inode.py \
             --rrgraph_node_map ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_xc7a50t-basys3_test.rr_graph.real.xml.node_map.pickle \
             --connection_database ${SF_ROOT}/build/xc7/archs/artix7/devices/xc7a50t-basys3-roi-virt/channels.db --inode $1
@@ -722,9 +724,7 @@ GO(lookahead) (
                --disable_errors check_unbuffered_edges:check_route:check_place \
                --suppress_warnings sum_pin_class:check_unbuffered_edges:load_rr_indexed_data_T_values:check_rr_node:trans_per_R \
                --route_chan_width 500 \
-               --astar_fac 0.75 \
-               --bb_factor 100 \
-               --lookahead_search_locations 25,23;23,25;1,1;76,1;25,25;25,27;75,26
+               --allowed_tiles_for_delay_model BLK-TL-SLICEL,BLK-TL-SLICEM
     }})
 )
 
@@ -734,7 +734,7 @@ GO(install-sdf-timing)
 GO(mergable-wip)
     OK_BRANCHES=""
     CONFLICTING_BRANCHES=""
-    for b in `git branch -r --list 'origin/wip/*'`
+    for b in `git branch -r --list "${1:-origin}/wip/*"`
     do
         if GO_CALL(ok2merge) "$b"
         then
@@ -794,3 +794,13 @@ GO(route-murax) (
           --read_placement_delay_lookup ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_${GRAPH}_test.place_delay.bin \
           --route
 )
+
+GO(use-my)
+  case "$1" in
+    vpr)
+      export VPR=${HOME}/src/symbiflow/vtr-verilog-to-routing/vpr/vpr
+      ;;
+    *)
+      echo "Unknown command"
+      ;;
+  esac
