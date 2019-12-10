@@ -775,7 +775,6 @@ GO(route-murax) (
           --router_high_fanout_threshold -1 \
           --constant_net_method route \
           --route_chan_width 500 \
-          --max_criticality 0.9 \
           --clock_modeling route \
           --place_delay_model delta_override \
           --router_lookahead connection_box_map \
@@ -785,9 +784,12 @@ GO(route-murax) (
           --allow_dangling_combinational_nodes on \
           --disable_errors check_unbuffered_edges:check_route \
           --congested_routing_iteration_threshold 0.8 \
-          --timing_tradeoff 0.6 \
-          --astar_fac 1.0 \
+          --incremental_reroute_delay_ripup off \
+          --base_cost_type delay_normalized_length_bounded \
+          --astar_fac 1.2 \
           --bb_factor 10 \
+          --initial_pres_fac 4.0 \
+          --disable_check_rr_graph on \
           --suppress_warnings ${SF_ROOT}/build/${TESTDIR}/noisy_warnings.log,sum_pin_class:check_unbuffered_edges:load_rr_indexed_data_T_values:check_rr_node:trans_per_R \
           --sdc_file ${SF_ROOT}/build/tests/9-soc/murax/basys3.sdc \
           --read_router_lookahead ${SF_ROOT}/build/xc7/archs/artix7/devices/rr_graph_${GRAPH}_test.lookahead.bin \
