@@ -807,3 +807,10 @@ GO(use-my)
       echo "Unknown command"
       ;;
   esac
+
+GO(rerun-vpr)
+  CMD=`grep -m 1 $HOME vpr_stdout.log`
+  echo "${CMD} $@"
+  if GO_CALL(prompt) "Run this?"; then
+      eval "${CMD} $@"
+  fi
