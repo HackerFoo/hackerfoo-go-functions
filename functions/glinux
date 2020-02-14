@@ -1,0 +1,13 @@
+GO(dev-box)
+  case "$1" in
+      start | stop)
+          gcloud beta compute instances $1 dusty-dev
+          ;;
+      ssh)
+          GO_CALL(dev-box) start
+          gcloud beta compute ssh dusty-dev
+          ;;
+      *)
+          echo "unknown command"
+          ;;
+  esac
