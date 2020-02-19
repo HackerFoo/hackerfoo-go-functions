@@ -84,3 +84,18 @@ GO(ok2merge) (
     rm ${PATCH}
     return ${RET}
 )
+
+GO(auto) (
+  ROOT=`git rev-parse --show-toplevel`
+  cd ${ROOT}
+  while true
+  do
+      echo "waiting for changes in ${ROOT}"
+      inotifywait -q -e create,modify,move,delete \
+        --fromfile <(git ls-files -z \
+                         | xargs -0 -I files find files ! -type l)
+      sleep 1
+      clear
+      $@
+  done
+)
