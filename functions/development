@@ -90,12 +90,22 @@ GO(auto) (
   cd ${ROOT}
   while true
   do
-      echo "waiting for changes in ${ROOT}"
+      (
+          clear
+          if $@; then
+              printf "\n\033[1;32mFinished ${ROOT}\033[0m"
+          else
+              printf "\n\033[1;31mFailed ${ROOT}\033[0m"
+          fi
+      ) &
+
       inotifywait -q -e create,modify,move,delete \
         --fromfile <(git ls-files -z \
                          | xargs -0 -I files find files ! -type l)
-      sleep 1
-      clear
-      $@
+
+      if jobs %% &> /dev/null; then
+          echo "Aborting"
+          kill %% &> /dev/null
+      fi
   done
 )
