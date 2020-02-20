@@ -809,9 +809,9 @@ GO(use-my)
   esac
 
 GO(rerun-vpr)
-  CMD=`grep -m 1 $HOME ${1:-vpr_stdout.log}`
+  CMD=`grep -m 1 ^\[^\ ]\*/vpr ${1:-vpr_stdout.log}`
   shift
-  CMD="`GO_CALL(substitute-args) ${CMD} $@`"
+  CMD="`GO_CALL(substitute-args) ${CMD} "$@"`"
   echo "${CMD}"
   if GO_CALL(prompt) "Run this?"; then
       eval "${CMD}"
