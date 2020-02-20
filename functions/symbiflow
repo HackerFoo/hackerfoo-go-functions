@@ -811,7 +811,8 @@ GO(use-my)
 GO(rerun-vpr)
   CMD=`grep -m 1 $HOME ${1:-vpr_stdout.log}`
   shift
-  echo "${CMD} $@"
+  CMD="`GO_CALL(substitute-args) ${CMD} $@`"
+  echo "${CMD}"
   if GO_CALL(prompt) "Run this?"; then
-      eval "${CMD} $@"
+      eval "${CMD}"
   fi
