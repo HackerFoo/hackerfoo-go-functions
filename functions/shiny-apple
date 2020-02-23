@@ -29,6 +29,7 @@ GO(update_popr_eval)
       make js/eval.js BUILD=release-with-asserts
       cd ${HACKERFOO_DIR}/app_engine
       cp ${POPRC_ROOT}/js/eval.{js,wasm} public/js
+      cp ${POPRC_ROOT}/eval.html public
       (
           cd public
           GO_CALL(in-tmux) web-server
