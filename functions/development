@@ -99,13 +99,27 @@ GO(auto) (
           fi
       ) &
 
-      inotifywait -q -e create,modify,move,delete \
-        --fromfile <(git ls-files -z \
-                         | xargs -0 -I files find files ! -type l)
+      if which -s inotifywait; then
+          # use inotifywait
+          inotifywait -q -e create,modify,move,delete \
+            --fromfile <(git ls-files -z \
+                             | xargs -0 -I files find files ! -type l)
+      elif which -s fswatch; then
+          # use fswatch
+          git ls-files -z \
+              | xargs -0 -I files find files ! -type l \
+              | xargs fswatch -1
+      else
+          echo "requires inotifywait or fswatch"
+          return 1
+      fi
 
       if jobs %% &> /dev/null; then
           echo "Aborting"
           kill %% &> /dev/null
       fi
+
+      # slight pause to allow CTRL-C
+      sleep 0.2
   done
 )
