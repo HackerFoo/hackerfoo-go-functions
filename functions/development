@@ -92,7 +92,7 @@ GO(auto) (
   if [ ! -e ${AUTOFILELIST} ]; then
       echo generating .autofilelist
       git ls-files -z \
-          | xargs -0 -I files find files -type f \
+          | xargs -0 -I files find files -type f ! -iname '*.in' \
                   > ${AUTOFILELIST}
   fi
   while true
