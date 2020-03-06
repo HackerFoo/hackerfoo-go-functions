@@ -87,11 +87,18 @@ GO(ok2merge) (
 
 GO(auto) (
   ROOT=`git rev-parse --show-toplevel`
+  AUTOFILELIST=.autofilelist
   cd ${ROOT}
+  if [ ! -e ${AUTOFILELIST} ]; then
+      echo generating .autofilelist
+      git ls-files -z \
+          | xargs -0 -I files find files -type f \
+                  > ${AUTOFILELIST}
+  fi
   while true
   do
       (
-          clear
+          #clear
           if (eval "$@"); then
               printf "\n\033[1;32mFinished ${ROOT}\033[0m"
           else
@@ -99,16 +106,13 @@ GO(auto) (
           fi
       ) &
 
-      if which -s inotifywait; then
+      if which inotifywait &> /dev/null; then
           # use inotifywait
-          inotifywait -q -e create,modify,move,delete \
-            --fromfile <(git ls-files -z \
-                             | xargs -0 -I files find files ! -type l)
-      elif which -s fswatch; then
+          inotifywait -q -e modify,move,delete \
+            --fromfile ${AUTOFILELIST}
+      elif which fswatch &> /dev/null; then
           # use fswatch
-          git ls-files -z \
-              | xargs -0 -I files find files ! -type l \
-              | xargs fswatch -1
+          xargs -a ${AUTOFILELIST} fswatch -1
       else
           echo "requires inotifywait or fswatch"
           return 1
