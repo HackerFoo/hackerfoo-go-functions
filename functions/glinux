@@ -5,9 +5,32 @@ GO(dev-box)
           ;;
       ssh)
           GO_CALL(dev-box) start
-          gcloud beta compute ssh dusty-dev
+          shift
+          gcloud beta compute ssh dusty-dev -- $@
+          ;;
+      tmux)
+          shift
+          GO_CALL(dev-box) ssh -t tmux -CC $@
           ;;
       *)
           echo "unknown command"
+          ;;
+  esac
+
+GO(sj)
+  if ! corp-ssh-helper -check; then
+    gcert
+  fi
+  case "$1" in
+      tmux)
+          shift
+          ssh $SJ -t tmx2 -CC $@
+          ;;
+      ssh)
+          shift
+          ssh $SJ $@
+          ;;
+      *)
+          ssh $SJ -t tmx2 -CC $@
           ;;
   esac
