@@ -130,5 +130,9 @@ GO(auto) (
 )
 
 GO(list-make-targets) {
-    make -npq __BASH_MAKE_COMPLETION__=1 .DEFAULT 2>/dev/null | sed -nf <( _make_target_extract_script --)
+    __load_completion make # to load _make_target_extract_script
+    make -npq __BASH_MAKE_COMPLETION__=1 .DEFAULT 2>/dev/null | \
+        sed -nf <( _make_target_extract_script --) | \
+        sed -ne '/^file_/!p' | \
+        sed -ne '/\/$/!p'
 }
