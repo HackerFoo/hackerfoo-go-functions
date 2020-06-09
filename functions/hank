@@ -10,6 +10,16 @@ GO(connect-headphones)
     echo "connect ${DEVICE[1]}" | bluetoothctl
   }})
 
+GO(connect-jabra)
+  BLOCK({{
+    DEVICE_NAME="Jabra the Hutt"
+    PS=( `ps -u gdm | grep -m 1 pulseaudio` )
+    sudo kill ${PS[0]}
+    DEVICE=( `echo paired-devices | bluetoothctl | grep "^Device .*$DEVICE_NAME"` )
+    sleep 2
+    echo "connect ${DEVICE[1]}" | bluetoothctl
+  }})
+
 GO(connect-trackpad)
   BLOCK({{
     DEVICE_NAME="Trackpad"
@@ -27,11 +37,7 @@ GO(monitor) (
 )
 
 GO(trim)
-    if [ "$1" ]; then
-        export PROMPT_DIRTRIM=$1
-    else
-        export PROMPT_DIRTRIM=3
-    fi
+    export PROMPT_DIRTRIM=${1:-3}
 
 GO(ssh-rev)
     BLOCK({{
@@ -61,3 +67,7 @@ GO(wake-hank)
 
 GO(fast-wifi)
     sudo iw dev wlp6s0 set power_save off
+
+GO(load-xdma)
+    sudo insmod ~/ko/xdma.ko
+    sudo chown `id -nu`:`id -ng` /dev/xdma0_user

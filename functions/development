@@ -121,9 +121,14 @@ GO(auto) (
       if jobs %% &> /dev/null; then
           echo "Aborting"
           kill %% &> /dev/null
+          wait %% &> /dev/null
       fi
 
       # slight pause to allow CTRL-C
       sleep 0.2
   done
 )
+
+GO(list-make-targets) {
+    make -npq __BASH_MAKE_COMPLETION__=1 .DEFAULT 2>/dev/null | sed -nf <( _make_target_extract_script --)
+}
