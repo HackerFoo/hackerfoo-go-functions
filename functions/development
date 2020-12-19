@@ -136,3 +136,42 @@ GO(list-make-targets) {
         sed -ne '/^file_/!p' | \
         sed -ne '/\/$/!p'
 }
+
+GO(with-debugger) (
+    set -eux
+    PROG=$1
+    CMD=$2
+    BIN=`which $PROG`
+    DIR=`mktemp -d`
+    SCRIPT=$DIR/$PROG
+    FILE_VAR($SCRIPT, {{
+#!/bin/sh
+lldb -- $BIN \$@
+}})
+    chmod a+x $SCRIPT
+    export PATH=$DIR:$PATH
+    $CMD
+    rm $SCRIPT
+    rmdir $DIR
+)
+
+GO(log-cmd) (
+    set -eux
+    PROG=$1
+    LOG=`realpath $2`
+    shift 2
+    CMD="$@"
+    BIN=`which $PROG`
+    DIR=`mktemp -d`
+    SCRIPT=$DIR/$PROG
+    FILE_VAR($SCRIPT, {{
+#!/bin/sh
+echo \$0 \$@ >> $LOG
+$BIN \$@
+}})
+    chmod a+x $SCRIPT
+    export PATH=$DIR:$PATH
+    $CMD
+    rm $SCRIPT
+    rmdir $DIR
+)

@@ -816,3 +816,24 @@ GO(rerun-vpr)
   if GO_CALL(prompt) "Run this?"; then
       eval "${CMD}"
   fi
+
+GO(sf-shell) (
+    git_root=`git rev-parse --show-toplevel`
+    project=`basename ${git_root}`
+    echo "PROJECT: ${project}"
+    attribute=${project}
+    if [[ -n "$1" ]] && [[ "$1" != "-"* ]]; then
+        if [[ "$1" == "."* ]]; then
+            attribute="${attribute}$1"
+        else
+            attribute="${attribute}-$1"
+        fi
+        shift
+        echo "ATTRIBUTE: ${attribute}"
+    fi
+    nix-shell ~/src/nix-symbiflow -A ${attribute} $@
+)
+
+GO(nix-phase) {
+    eval ${$1\Phase}
+}
