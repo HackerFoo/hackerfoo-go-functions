@@ -825,6 +825,8 @@ GO(sf-shell) (
     if [[ -n "$1" ]] && [[ "$1" != "-"* ]]; then
         if [[ "$1" == "."* ]]; then
             attribute="${attribute}$1"
+        elif [[ "$1" == "python" ]]; then
+            attribute="python.pkgs.${attribute}"
         else
             attribute="${attribute}-$1"
         fi
@@ -835,5 +837,23 @@ GO(sf-shell) (
 )
 
 GO(nix-phase) {
-    eval ${$1\Phase}
+    phase="${1}Phase"
+    eval "${!phase:-$phase}"
+}
+
+GO(gs-get) (
+    if [[ ! -d "$2" ]]; then
+        echo "go gs-get src dst"
+        exit 1
+    fi
+    set -eou pipefail
+    gsutil ls "gs://$1" | cut -c 6- | while read p; do
+        mkdir -p "$2/$(dirname $p)"
+        gsutil cp "gs://$p" "$2/$p"
+    done
+)
+
+# conda-shell ignoring outside environment
+GO(conda-shell) {
+    nix run -i nixpkgs.conda -c conda-shell
 }
