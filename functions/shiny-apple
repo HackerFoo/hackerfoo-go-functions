@@ -45,10 +45,24 @@ GO(tmux-hank)
     ssh -Y -C -c aes128-ctr -o IPQoS=af21 -o ServerAliveInterval=10 -L 13389:localhost:3389 home.hackerfoo.com -p 2222 -t tmux -CC $@
 
 GO(tmux-hank-wifi)
-    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -L 13389:localhost:3389 home.hackerfoo.com -p 2223 -t tmux -CC $@
+    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -o ServerAliveInterval=10 -o ServerAliveCountMax=2 -L 13389:localhost:3389 home.hackerfoo.com -p 2223 -t tmux -CC $@
+
+GO(jupyter)
+    ssh -L 8888:localhost:8888 home.hackerfoo.com -p 2223
 
 GO(tmux-hank-home)
-    ssh -Y -C -c aes128-ctr -o IPQoS=af21 hank -t tmux -CC $@
+    ssh -Y -C -c aes128-ctr -o IPQoS=af21 -o ServerAliveInterval=10 -o ServerAliveCountMax=2 hank -t tmux -CC $@
 
 GO(unload-ftdi)
     sudo kextunload -p -b com.FTDI.driver.FTDIUSBSerialDriver
+
+GO(fix-audio)
+    sudo killall coreaudiod 
+
+GO(mp3-to-ogg) {
+    for i in *.mp3; do
+      j=$(echo -n $i | sed -e 's/.mp3/.ogg/g')
+      echo "converting $i  to  $j"
+      ffmpeg -y -i "$i"  -strict -2 -acodec vorbis -ac 2 -aq 50 "$j"
+    done 
+}

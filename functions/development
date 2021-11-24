@@ -95,6 +95,10 @@ GO(auto) (
           | xargs -0 -I files find files -type f ! -iname '*.in' \
                   > ${AUTOFILELIST}
   fi
+
+  RUN=1
+  trap 'RUN=0' INT
+
   while true
   do
       (
@@ -112,10 +116,16 @@ GO(auto) (
             --fromfile ${AUTOFILELIST}
       elif which fswatch &> /dev/null; then
           # use fswatch
-          xargs -a ${AUTOFILELIST} fswatch -1
+          fswatch -1 `cat ${AUTOFILELIST}`
       else
           echo "requires inotifywait or fswatch"
           return 1
+      fi
+
+      echo "RUN $RUN"
+      if [ $RUN == 0 ]; then
+          echo "exiting"
+          return 0
       fi
 
       if jobs %% &> /dev/null; then
