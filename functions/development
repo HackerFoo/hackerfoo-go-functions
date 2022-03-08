@@ -185,3 +185,11 @@ $BIN \$@
     rm $SCRIPT
     rmdir $DIR
 )
+
+GO(fetch-pr) (
+  if [ "$#" -ne 2 ]; then
+    echo "go fetch-pr <remote> <pr>"
+  else
+    git fetch $1 pull/$2/head:pr$2
+  fi
+)
