@@ -7,9 +7,15 @@ GO(switch)
 
 GO(upgrade)
     BLOCK({{
-      sudo nixos-rebuild switch --upgrade
-      nix-env --upgrade
-      sudo nix-collect-garbage --delete-older-than 30d
+      if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        sudo nixos-rebuild switch --upgrade
+        nix-env --upgrade
+        sudo nix-collect-garbage --delete-older-than 30d
+      elif [[ "$OSTYPE" == "darwin"* ]]; then
+        sudo NIX_SSL_CERT_FILE=/nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt -i sh -c 'nix-channel --update && nix-env -iA nixpkgs.nix && launchctl remove org.nixos.nix-daemon && sleep 1 && launchctl load /Library/LaunchDaemons/org.nixos.nix-daemon.plist'
+      else
+        echo "Unsupported OS"
+      fi
     }})
 
 GO(shell)

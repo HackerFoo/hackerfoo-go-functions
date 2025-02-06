@@ -193,3 +193,13 @@ GO(fetch-pr) (
     git fetch $1 pull/$2/head:pr$2
   fi
 )
+
+GO(restore-to) (
+  if [ "$#" -ne 1 ]; then
+    echo "go restore-to <tree>"
+  else
+    git fetch --tags --all
+    git restore --source=$1 --worktree --staged .
+    git commit --edit --message="restore to upstream = $1"
+  fi
+)

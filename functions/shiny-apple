@@ -66,3 +66,8 @@ GO(mp3-to-ogg) {
       ffmpeg -y -i "$i"  -strict -2 -acodec vorbis -ac 2 -aq 50 "$j"
     done 
 }
+
+GO(flush-dns) {
+    sudo dscacheutil -flushcache
+    sudo killall -HUP mDNSResponder
+}

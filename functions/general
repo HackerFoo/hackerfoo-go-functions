@@ -68,3 +68,12 @@ GO(substitute-args) (
           <(echo "${REST[@]}")
     fi
 )
+
+GO(use-vpn)
+    dig +short $1 | tail -1 | xargs ssh openwrt ipset add wg0_int
+
+GO(idrac-powerup)
+    ssh $1 racadm serveraction powerup
+
+GO(matrix-users)
+    curl --header "Authorization: Bearer $1" -X GET "https://sandbox.hackerfoo.com/_synapse/admin/v2/users?from=0&limit=3&guests=false&order_by=creation_ts&dir=b" | json_pp

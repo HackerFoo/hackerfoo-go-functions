@@ -71,3 +71,12 @@ GO(fast-wifi)
 GO(load-xdma)
     sudo insmod ~/ko/xdma.ko
     sudo chown `id -nu`:`id -ng` /dev/xdma0_user
+
+GO(win10)
+    virt-viewer -c "qemu+ssh://dusty@$1/system" -z 80 -f --auto-resize=always win10 &> /dev/null
+
+GO(virt-manager)
+    virt-manager -c "qemu+ssh://dusty@$1/system" &> /dev/null
+
+GO(virsh)
+    virsh -c "qemu+ssh://dusty@$1/system"
